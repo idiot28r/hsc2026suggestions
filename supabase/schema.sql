@@ -74,17 +74,16 @@ alter table chapters        enable row level security;
 alter table topics          enable row level security;
 alter table student_progress enable row level security;
 
--- Public read of content (anon + authenticated).
+-- Public read of content. There are intentionally NO write policies, so the
+-- anon key cannot insert/update/delete content directly. Admin edits go through
+-- the SECURITY DEFINER functions in admin-auth.sql (token-gated), which run as
+-- the function owner and bypass RLS.
 create policy "public read subjects"  on subjects  for select using (true);
 create policy "public read sections"  on sections  for select using (true);
 create policy "public read chapters"  on chapters  for select using (true);
 create policy "public read topics"    on topics    for select using (true);
 
--- Only authenticated admins may insert/update/delete content.
-create policy "admin manage subjects" on subjects for all to authenticated using (true) with check (true);
-create policy "admin manage sections" on sections for all to authenticated using (true) with check (true);
-create policy "admin manage chapters" on chapters for all to authenticated using (true) with check (true);
-create policy "admin manage topics"   on topics   for all to authenticated using (true) with check (true);
-
 -- Students (anon) read/write their own progress to record tickmarks.
 create policy "anyone rw progress"    on student_progress for all using (true) with check (true);
+
+-- After this, run admin-auth.sql for the custom admin login + write functions.

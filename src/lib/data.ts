@@ -13,6 +13,58 @@ export type DbTable = 'subjects' | 'sections' | 'chapters' | 'topics'
 export const dataMode: 'supabase' | 'local' = isSupabaseConfigured ? 'supabase' : 'local'
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  ADMIN AUTH (custom: username/password → session token, verified by RPC)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ADMIN_TOKEN_KEY = 'hsc2026.admin.token'
+
+export function getAdminToken(): string | null {
+  try {
+    return localStorage.getItem(ADMIN_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+function setAdminToken(t: string) {
+  try {
+    localStorage.setItem(ADMIN_TOKEN_KEY, t)
+  } catch {
+    /* ignore */
+  }
+}
+export function clearAdminToken() {
+  try {
+    localStorage.removeItem(ADMIN_TOKEN_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Authenticate an admin. Local/demo mode has no backend, so it always succeeds. */
+export async function adminLogin(username: string, password: string): Promise<boolean> {
+  if (!supabase) return true
+  const { data, error } = await supabase.rpc('admin_login', { p_username: username, p_password: password })
+  if (error || !data) return false
+  setAdminToken(data as string)
+  return true
+}
+
+/** Is the stored admin token still valid? (Always true in local/demo mode.) */
+export async function adminValid(): Promise<boolean> {
+  if (!supabase) return true
+  const token = getAdminToken()
+  if (!token) return false
+  const { data, error } = await supabase.rpc('admin_valid', { p_token: token })
+  return !error && data === true
+}
+
+export async function adminLogout(): Promise<void> {
+  const token = getAdminToken()
+  clearAdminToken()
+  if (supabase && token) await supabase.rpc('admin_logout', { p_token: token })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  LOCAL DEMO STORE (localStorage-backed clone of the seed)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -155,7 +207,7 @@ export async function saveProgress(args: {
 
 export async function updateRecord(table: DbTable, id: string, patch: Record<string, unknown>): Promise<void> {
   if (supabase) {
-    const { error } = await supabase.from(table).update(patch).eq('id', id)
+    const { error } = await supabase.rpc('admin_update', { p_token: getAdminToken(), p_table: table, p_id: id, p_patch: patch })
     if (error) throw error
     return
   }
@@ -177,7 +229,7 @@ export async function updateRecord(table: DbTable, id: string, patch: Record<str
 
 export async function deleteRecord(table: DbTable, id: string): Promise<void> {
   if (supabase) {
-    const { error } = await supabase.from(table).delete().eq('id', id)
+    const { error } = await supabase.rpc('admin_delete', { p_token: getAdminToken(), p_table: table, p_id: id })
     if (error) throw error
     return
   }
@@ -215,7 +267,7 @@ export async function createSubject(input: Partial<Subject> & { id: string; titl
     sq_value_per_q: input.sq_value_per_q ?? 2,
   }
   if (supabase) {
-    const { error } = await supabase.from('subjects').insert(row)
+    const { error } = await supabase.rpc('admin_insert', { p_token: getAdminToken(), p_table: 'subjects', p_data: row })
     if (error) throw error
     return
   }
@@ -235,7 +287,7 @@ export async function createSection(subjectId: string): Promise<string> {
     sort_order: 999,
   }
   if (supabase) {
-    const { error } = await supabase.from('sections').insert(row)
+    const { error } = await supabase.rpc('admin_insert', { p_token: getAdminToken(), p_table: 'sections', p_data: row })
     if (error) throw error
     return id
   }
@@ -256,7 +308,7 @@ export async function createChapter(sectionId: string): Promise<string> {
     sort_order: 999,
   }
   if (supabase) {
-    const { error } = await supabase.from('chapters').insert(row)
+    const { error } = await supabase.rpc('admin_insert', { p_token: getAdminToken(), p_table: 'chapters', p_data: row })
     if (error) throw error
     return id
   }
@@ -272,7 +324,7 @@ export async function createTopic(chapterId: string): Promise<string> {
   const id = uid('top')
   const row: Topic = { id, chapter_id: chapterId, title: 'নতুন টপিক', weight: 50, sort_order: 999 }
   if (supabase) {
-    const { error } = await supabase.from('topics').insert(row)
+    const { error } = await supabase.rpc('admin_insert', { p_token: getAdminToken(), p_table: 'topics', p_data: row })
     if (error) throw error
     return id
   }

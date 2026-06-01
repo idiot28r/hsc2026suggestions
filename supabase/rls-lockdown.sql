@@ -5,21 +5,18 @@
 --  read/write are preserved. Run once via the SQL editor / Management API.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Remove demo-open anon write on content.
+-- Remove demo-open anon write on content (writes now go through the token-gated
+-- SECURITY DEFINER functions in admin-auth.sql).
 drop policy if exists "anon write subjects" on subjects;
 drop policy if exists "anon write sections" on sections;
 drop policy if exists "anon write chapters" on chapters;
 drop policy if exists "anon write topics"   on topics;
 
--- Grant content management to authenticated admins only.
+-- Drop any earlier authenticated-write policies (we don't use Supabase Auth).
 drop policy if exists "admin manage subjects" on subjects;
 drop policy if exists "admin manage sections" on sections;
 drop policy if exists "admin manage chapters" on chapters;
 drop policy if exists "admin manage topics"   on topics;
-create policy "admin manage subjects" on subjects for all to authenticated using (true) with check (true);
-create policy "admin manage sections" on sections for all to authenticated using (true) with check (true);
-create policy "admin manage chapters" on chapters for all to authenticated using (true) with check (true);
-create policy "admin manage topics"   on topics   for all to authenticated using (true) with check (true);
 
 -- Ensure public read still exists.
 drop policy if exists "public read subjects" on subjects;

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import type { Session } from '@supabase/supabase-js'
 import {
   fetchSubjects,
   fetchSyllabus,
@@ -12,9 +11,11 @@ import {
   createTopic,
   resetLocalContent,
   dataMode,
+  adminLogin,
+  adminValid,
+  adminLogout,
   type DbTable,
 } from '../lib/data'
-import { supabase } from '../lib/supabaseClient'
 import type { Chapter, GroupKey, Section, Subject, SubjectWithSyllabus } from '../lib/types'
 import { GROUPS } from '../lib/types'
 import { useUserParams } from '../lib/useUserParams'
@@ -27,24 +28,22 @@ export default function AdminPage() {
   // The admin entrance is hidden unless ?admin=true is on the URL.
   if (params.get('admin') !== 'true') return <Navigate to="/" replace />
   // Local/demo mode has no auth backend — open the manager for local editing.
-  if (dataMode === 'local' || !supabase) return <AdminManager />
+  if (dataMode === 'local') return <AdminManager />
   return <AdminAuthGate />
 }
 
 function AdminAuthGate() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
+  const [ok, setOk] = useState<boolean | undefined>(undefined)
   useEffect(() => {
-    supabase!.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: sub } = supabase!.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => sub.subscription.unsubscribe()
+    adminValid().then(setOk)
   }, [])
-  if (session === undefined) return <div className="empty" style={{ paddingTop: 80 }}>লোড হচ্ছে…</div>
-  if (!session) return <AdminLogin />
-  return <AdminManager />
+  if (ok === undefined) return <div className="empty" style={{ paddingTop: 80 }}>লোড হচ্ছে…</div>
+  if (!ok) return <AdminLogin onSuccess={() => setOk(true)} />
+  return <AdminManager onLogout={() => setOk(false)} />
 }
 
-function AdminLogin() {
-  const [email, setEmail] = useState('')
+function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
+  const [username, setUsername] = useState('')
   const [pw, setPw] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -53,10 +52,10 @@ function AdminLogin() {
     e.preventDefault()
     setBusy(true)
     setError('')
-    const { error } = await supabase!.auth.signInWithPassword({ email: email.trim(), password: pw })
+    const ok = await adminLogin(username.trim(), pw)
     setBusy(false)
-    if (error) setError('লগইন ব্যর্থ — ইমেইল বা পাসওয়ার্ড সঠিক নয়।')
-    // On success, onAuthStateChange flips the gate to the manager.
+    if (ok) onSuccess()
+    else setError('লগইন ব্যর্থ — ইউজারনেম বা পাসওয়ার্ড সঠিক নয়।')
   }
 
   return (
@@ -66,18 +65,20 @@ function AdminLogin() {
         <h2>অ্যাডমিন লগইন</h2>
         <p className="muted">Syllabus Manager-এ প্রবেশ করতে লগইন করুন।</p>
         <input
-          type="email"
+          type="text"
           autoFocus
           required
+          autoComplete="username"
           className="gate-input"
           style={{ letterSpacing: 'normal', textAlign: 'left' }}
-          placeholder="ইমেইল"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); setError('') }}
+          placeholder="ইউজারনেম"
+          value={username}
+          onChange={(e) => { setUsername(e.target.value); setError('') }}
         />
         <input
           type="password"
           required
+          autoComplete="current-password"
           className={`gate-input ${error ? 'err' : ''}`}
           style={{ letterSpacing: 'normal', textAlign: 'left' }}
           placeholder="পাসওয়ার্ড"
@@ -96,7 +97,7 @@ function AdminLogin() {
   )
 }
 
-function AdminManager() {
+function AdminManager({ onLogout }: { onLogout?: () => void }) {
   const user = useUserParams()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -187,8 +188,14 @@ function AdminManager() {
           <Link to={`/${user.carry}`} className="btn btn-soft btn-sm">
             অ্যাপ দেখুন
           </Link>
-          {dataMode !== 'local' && supabase && (
-            <button className="btn btn-ghost btn-sm" onClick={() => supabase!.auth.signOut()}>
+          {dataMode !== 'local' && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={async () => {
+                await adminLogout()
+                onLogout?.()
+              }}
+            >
               লগআউট
             </button>
           )}
