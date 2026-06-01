@@ -467,22 +467,17 @@ function SyllabusEditor({
 
   return (
     <div style={{ paddingTop: 16 }}>
-      <div className="row" style={{ gap: 10, marginBottom: 14 }}>
+      <div className="row" style={{ marginBottom: 14 }}>
         <button className="btn btn-ghost btn-sm" onClick={onBack}>
           ← গ্রিডে ফিরুন
         </button>
-        <div className="spacer" />
-        <span className="cq-badge">CQ Val/Q</span>
-        <Num value={syllabus.cq_value_per_q} onSave={(v) => onSave('subjects', subjectId, { cq_value_per_q: v })} />
-        <span className="cq-badge" style={{ background: 'var(--warn-soft)', color: 'var(--warn)', borderColor: '#fde68a' }}>
-          SQ Val/Q
-        </span>
-        <Num value={syllabus.sq_value_per_q} onSave={(v) => onSave('subjects', subjectId, { sq_value_per_q: v })} />
       </div>
 
-      <h2 style={{ margin: '0 0 16px' }}>
+      <h2 style={{ margin: '0 0 14px' }}>
         <Text value={syllabus.title} onSave={(v) => onSave('subjects', subjectId, { title: v })} style={{ fontSize: '1.25rem', fontWeight: 800 }} />
       </h2>
+
+      <CqRuleBar syllabus={syllabus} subjectId={subjectId} onSave={onSave} />
 
       {syllabus.sections.map((sec) => (
         <SectionEditor key={sec.id} section={sec} onSave={onSave} onDelete={onDelete} reload={reload} />
@@ -493,12 +488,78 @@ function SyllabusEditor({
         style={{ marginTop: 12 }}
         onClick={async () => {
           await createSection(subjectId)
-          notify('সেকশন যোগ হয়েছে')
+          notify('নতুন গ্রুপ যোগ হয়েছে')
           reload()
         }}
       >
-        + নতুন সেকশন যোগ করুন
+        + নতুন গ্রুপ যোগ করুন
       </button>
+    </div>
+  )
+}
+
+/** Subject-level CQ-rule summary: total marks, per-question value, the derived
+ *  "answer M questions", and live validation of the section minimums. */
+function CqRuleBar({
+  syllabus,
+  subjectId,
+  onSave,
+}: {
+  syllabus: SubjectWithSyllabus
+  subjectId: string
+  onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
+}) {
+  // Local mirror so the derived "answer M" updates live as the expert types.
+  const [maxCq, setMaxCq] = useState(Number(syllabus.max_cq))
+  const [cqVal, setCqVal] = useState(Number(syllabus.cq_value_per_q))
+  useEffect(() => {
+    setMaxCq(Number(syllabus.max_cq))
+    setCqVal(Number(syllabus.cq_value_per_q))
+  }, [syllabus.max_cq, syllabus.cq_value_per_q])
+
+  const answerM = cqVal > 0 ? Math.round(maxCq / cqVal) : 0
+  const sumMin = syllabus.sections.reduce((a, s) => a + (Number(s.min_cq_required) || 0), 0)
+  const sumAvail = syllabus.sections.reduce((a, s) => a + (Number(s.total_cq_available) || 0), 0)
+  const optional = Math.max(0, answerM - sumMin)
+  const noCq = maxCq <= 0
+
+  return (
+    <div className="card cq-rule">
+      <div className="cq-rule-head">📋 সৃজনশীল প্রশ্নের নিয়ম</div>
+      {noCq ? (
+        <div className="cq-rule-line muted">এই বিষয়ে সৃজনশীল (CQ) নেই — নিচের গ্রুপগুলো শুধু MCQ/SQ ও অধ্যায়ের জন্য।</div>
+      ) : (
+        <>
+          <div className="cq-rule-fields">
+            <label>
+              মোট CQ নম্বর
+              <Num value={syllabus.max_cq} onLive={setMaxCq} onSave={(v) => onSave('subjects', subjectId, { max_cq: v })} />
+            </label>
+            <label>
+              প্রতি প্রশ্নের নম্বর
+              <Num value={syllabus.cq_value_per_q} onLive={setCqVal} onSave={(v) => onSave('subjects', subjectId, { cq_value_per_q: v })} />
+            </label>
+            <div className="cq-rule-answer">
+              শিক্ষার্থীকে উত্তর দিতে হবে <b>{answerM}</b> টি প্রশ্ন
+            </div>
+          </div>
+          <div className={`cq-rule-check ${sumMin > answerM ? 'bad' : 'ok'}`}>
+            {sumMin > answerM ? (
+              <>⚠️ সব গ্রুপের আবশ্যক যোগফল ({sumMin}) উত্তরসংখ্যা ({answerM})-এর চেয়ে বেশি — কমাও।</>
+            ) : (
+              <>
+                আবশ্যক মোট <b>{sumMin}</b> টি · {optional > 0 ? `বাকি ${optional} টি যেকোনো গ্রুপ থেকে` : 'কোনো ঐচ্ছিক প্রশ্ন নেই'} · মোট প্রশ্ন আসবে {sumAvail} টি
+              </>
+            )}
+          </div>
+        </>
+      )}
+      {Number(syllabus.max_sq) > 0 && (
+        <div className="cq-rule-line">
+          <span className="muted">সংক্ষিপ্ত (SQ): মোট {syllabus.max_sq} নম্বর · প্রতি প্রশ্নে</span>
+          <Num value={syllabus.sq_value_per_q} onSave={(v) => onSave('subjects', subjectId, { sq_value_per_q: v })} />
+        </div>
+      )}
     </div>
   )
 }
@@ -514,20 +575,43 @@ function SectionEditor({
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
 }) {
+  const [min, setMin] = useState(Number(section.min_cq_required))
+  const [avail, setAvail] = useState(Number(section.total_cq_available))
+  useEffect(() => {
+    setMin(Number(section.min_cq_required))
+    setAvail(Number(section.total_cq_available))
+  }, [section.min_cq_required, section.total_cq_available])
+
+  let hint = ''
+  let bad = false
+  if (avail <= 0) hint = 'এই গ্রুপ থেকে কোনো সৃজনশীল প্রশ্ন আসবে না (শুধু অধ্যায় ও MCQ/SQ)।'
+  else if (min <= 0) hint = `এই গ্রুপ থেকে ${avail} টি প্রশ্ন আসবে · উত্তর দেওয়া বাধ্যতামূলক নয়।`
+  else hint = `এই গ্রুপ থেকে ${avail} টি প্রশ্ন আসবে · কমপক্ষে ${min} টির উত্তর আবশ্যক।`
+  if (avail > 0 && min > avail) {
+    hint = `⚠️ আবশ্যক উত্তর (${min}) প্রশ্নসংখ্যা (${avail})-এর চেয়ে বেশি — ঠিক করো।`
+    bad = true
+  }
+
   return (
     <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
       <div className="section-bar" style={{ background: 'var(--surface-2)', padding: 12, borderBottom: '1px solid var(--border)' }}>
-        <Text value={section.title} onSave={(v) => onSave('sections', section.id, { title: v })} style={{ fontWeight: 800, color: 'var(--primary-700)' }} />
-        <span className="row" style={{ gap: 6, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-          Min CQ
-          <Num value={section.min_cq_required} onSave={(v) => onSave('sections', section.id, { min_cq_required: v })} />
-          Avail
-          <Num value={section.total_cq_available} onSave={(v) => onSave('sections', section.id, { total_cq_available: v })} />
+        <Text value={section.title} placeholder="গ্রুপ / বিভাগের নাম" onSave={(v) => onSave('sections', section.id, { title: v })} style={{ fontWeight: 800, color: 'var(--primary-700)' }} />
+        <span className="row" style={{ gap: 10, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+          <label className="seg-field" title="এই গ্রুপ থেকে কমপক্ষে কয়টি সৃজনশীলের উত্তর দিতে হবে। ০ দিলে এই গ্রুপ থেকে উত্তর দেওয়া বাধ্যতামূলক নয়।">
+            আবশ্যক উত্তর
+            <Num value={section.min_cq_required} onLive={setMin} onSave={(v) => onSave('sections', section.id, { min_cq_required: v })} />
+          </label>
+          <label className="seg-field" title="এই গ্রুপের অধ্যায়গুলো থেকে কয়টি সৃজনশীল প্রশ্ন প্রশ্নপত্রে আসবে।">
+            প্রশ্ন আসবে
+            <Num value={section.total_cq_available} onLive={setAvail} onSave={(v) => onSave('sections', section.id, { total_cq_available: v })} />
+          </label>
           <button className="del-x" onClick={() => onDelete('sections', section.id, reload)}>
             ✕
           </button>
         </span>
       </div>
+
+      <div className={`section-rule-hint ${bad ? 'bad' : ''}`}>{hint}</div>
 
       <div style={{ padding: 6 }}>
         {section.chapters.map((chap) => (

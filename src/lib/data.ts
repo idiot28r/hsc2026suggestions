@@ -229,7 +229,7 @@ export async function createSection(subjectId: string): Promise<string> {
   const row: Omit<Section, 'chapters'> = {
     id,
     subject_id: subjectId,
-    title: 'নতুন অধ্যায়-গুচ্ছ',
+    title: 'নতুন গ্রুপ',
     min_cq_required: 0,
     total_cq_available: 0,
     sort_order: 999,
