@@ -62,8 +62,11 @@ create index if not exists idx_topics_chapter on topics(chapter_id);
 create index if not exists idx_progress_phone on student_progress(phone);
 
 -- ── Row Level Security ───────────────────────────────────────────────────────
--- Content tables are world-readable; student_progress is read/written by the
--- anon key (the brritto webview). Tighten these to match your auth model.
+-- Content tables (subjects/sections/chapters/topics): world-READABLE so the
+-- brritto webview (anon) can show suggestions, but only WRITABLE by authenticated
+-- admins (subject-matter experts logging in via Supabase Auth on the admin panel).
+-- student_progress: anon read/write so logged-in-via-brritto students can save
+-- their tickmarks (keyed by phone in app logic).
 
 alter table subjects        enable row level security;
 alter table sections        enable row level security;
@@ -71,15 +74,17 @@ alter table chapters        enable row level security;
 alter table topics          enable row level security;
 alter table student_progress enable row level security;
 
+-- Public read of content (anon + authenticated).
 create policy "public read subjects"  on subjects  for select using (true);
 create policy "public read sections"  on sections  for select using (true);
 create policy "public read chapters"  on chapters  for select using (true);
 create policy "public read topics"    on topics    for select using (true);
 
--- Demo-friendly: allow anon to manage content + progress. Replace with an
--- authenticated/admin policy before production.
-create policy "anon write subjects" on subjects for all using (true) with check (true);
-create policy "anon write sections" on sections for all using (true) with check (true);
-create policy "anon write chapters" on chapters for all using (true) with check (true);
-create policy "anon write topics"   on topics   for all using (true) with check (true);
-create policy "anon rw progress"    on student_progress for all using (true) with check (true);
+-- Only authenticated admins may insert/update/delete content.
+create policy "admin manage subjects" on subjects for all to authenticated using (true) with check (true);
+create policy "admin manage sections" on sections for all to authenticated using (true) with check (true);
+create policy "admin manage chapters" on chapters for all to authenticated using (true) with check (true);
+create policy "admin manage topics"   on topics   for all to authenticated using (true) with check (true);
+
+-- Students (anon) read/write their own progress to record tickmarks.
+create policy "anyone rw progress"    on student_progress for all using (true) with check (true);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import type { Session } from '@supabase/supabase-js'
 import {
   fetchSubjects,
   fetchSyllabus,
@@ -13,6 +14,7 @@ import {
   dataMode,
   type DbTable,
 } from '../lib/data'
+import { supabase } from '../lib/supabaseClient'
 import type { Chapter, GroupKey, Section, Subject, SubjectWithSyllabus } from '../lib/types'
 import { GROUPS } from '../lib/types'
 import { useUserParams } from '../lib/useUserParams'
@@ -20,50 +22,71 @@ import StarRating from '../components/StarRating'
 import ThemeToggle from '../components/ThemeToggle'
 import Toast, { type ToastMsg } from '../components/Toast'
 
-const ADMIN_PIN = (import.meta.env.VITE_ADMIN_PIN as string | undefined) || 'hsc2026admin'
-const UNLOCK_KEY = 'hsc2026.admin.ok'
-
 export default function AdminPage() {
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(UNLOCK_KEY) === '1')
-  if (!unlocked) return <AdminGate onUnlock={() => setUnlocked(true)} />
+  const [params] = useSearchParams()
+  // The admin entrance is hidden unless ?admin=true is on the URL.
+  if (params.get('admin') !== 'true') return <Navigate to="/" replace />
+  // Local/demo mode has no auth backend — open the manager for local editing.
+  if (dataMode === 'local' || !supabase) return <AdminManager />
+  return <AdminAuthGate />
+}
+
+function AdminAuthGate() {
+  const [session, setSession] = useState<Session | null | undefined>(undefined)
+  useEffect(() => {
+    supabase!.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: sub } = supabase!.auth.onAuthStateChange((_e, s) => setSession(s))
+    return () => sub.subscription.unsubscribe()
+  }, [])
+  if (session === undefined) return <div className="empty" style={{ paddingTop: 80 }}>লোড হচ্ছে…</div>
+  if (!session) return <AdminLogin />
   return <AdminManager />
 }
 
-function AdminGate({ onUnlock }: { onUnlock: () => void }) {
-  const [pin, setPin] = useState('')
-  const [error, setError] = useState(false)
+function AdminLogin() {
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (pin === ADMIN_PIN) {
-      sessionStorage.setItem(UNLOCK_KEY, '1')
-      onUnlock()
-    } else {
-      setError(true)
-    }
+    setBusy(true)
+    setError('')
+    const { error } = await supabase!.auth.signInWithPassword({ email: email.trim(), password: pw })
+    setBusy(false)
+    if (error) setError('লগইন ব্যর্থ — ইমেইল বা পাসওয়ার্ড সঠিক নয়।')
+    // On success, onAuthStateChange flips the gate to the manager.
   }
 
   return (
     <div className="gate">
       <form className="card gate-card" onSubmit={submit}>
-        <div className="gate-lock">🔒</div>
-        <h2>Syllabus Manager</h2>
-        <p className="muted">এই অংশে প্রবেশ করতে পিন দিন।</p>
+        <div className="gate-lock">🔐</div>
+        <h2>অ্যাডমিন লগইন</h2>
+        <p className="muted">Syllabus Manager-এ প্রবেশ করতে লগইন করুন।</p>
+        <input
+          type="email"
+          autoFocus
+          required
+          className="gate-input"
+          style={{ letterSpacing: 'normal', textAlign: 'left' }}
+          placeholder="ইমেইল"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError('') }}
+        />
         <input
           type="password"
-          inputMode="numeric"
-          autoFocus
+          required
           className={`gate-input ${error ? 'err' : ''}`}
-          value={pin}
-          placeholder="PIN"
-          onChange={(e) => {
-            setPin(e.target.value)
-            setError(false)
-          }}
+          style={{ letterSpacing: 'normal', textAlign: 'left' }}
+          placeholder="পাসওয়ার্ড"
+          value={pw}
+          onChange={(e) => { setPw(e.target.value); setError('') }}
         />
-        {error && <div className="gate-err">ভুল পিন। আবার চেষ্টা করুন।</div>}
-        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-          প্রবেশ করুন
+        {error && <div className="gate-err">{error}</div>}
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={busy}>
+          {busy ? 'প্রবেশ করা হচ্ছে…' : 'প্রবেশ করুন'}
         </button>
         <Link to="/" className="muted" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
           ← অ্যাপে ফিরে যান
@@ -164,6 +187,11 @@ function AdminManager() {
           <Link to={`/${user.carry}`} className="btn btn-soft btn-sm">
             অ্যাপ দেখুন
           </Link>
+          {dataMode !== 'local' && supabase && (
+            <button className="btn btn-ghost btn-sm" onClick={() => supabase!.auth.signOut()}>
+              লগআউট
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </header>

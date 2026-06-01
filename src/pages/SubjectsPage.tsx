@@ -49,12 +49,12 @@ export default function SubjectsPage() {
     [subjects, group],
   )
 
-  // Hidden admin entry: tap the brand mark 5×.
+  // Hidden admin entry: tap the brand mark 5× → admin login (gated by ?admin=true).
   function brandTap() {
     tapRef.current += 1
     if (tapRef.current >= 5) {
       tapRef.current = 0
-      navigate(`/admin${user.carry}`)
+      navigate('/admin?admin=true')
     }
     setTimeout(() => (tapRef.current = 0), 1200)
   }
