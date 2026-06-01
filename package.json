@@ -1,0 +1,29 @@
+{
+  "name": "hsc-2026-interactive-suggestion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "gen:seed": "tsx scripts/gen-seed-sql.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.3",
+    "katex": "^0.16.45",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.9.4"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tsx": "^4.21.0",
+    "typescript": "~5.6.3",
+    "vite": "^8.0.0"
+  }
+}
