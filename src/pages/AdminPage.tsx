@@ -16,9 +16,63 @@ import {
 import type { Chapter, Section, Subject, SubjectWithSyllabus } from '../lib/types'
 import { useUserParams } from '../lib/useUserParams'
 import StarRating from '../components/StarRating'
+import ThemeToggle from '../components/ThemeToggle'
 import Toast, { type ToastMsg } from '../components/Toast'
 
+const ADMIN_PIN = (import.meta.env.VITE_ADMIN_PIN as string | undefined) || 'hsc2026admin'
+const UNLOCK_KEY = 'hsc2026.admin.ok'
+
 export default function AdminPage() {
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(UNLOCK_KEY) === '1')
+  if (!unlocked) return <AdminGate onUnlock={() => setUnlocked(true)} />
+  return <AdminManager />
+}
+
+function AdminGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState(false)
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (pin === ADMIN_PIN) {
+      sessionStorage.setItem(UNLOCK_KEY, '1')
+      onUnlock()
+    } else {
+      setError(true)
+    }
+  }
+
+  return (
+    <div className="gate">
+      <form className="card gate-card" onSubmit={submit}>
+        <div className="gate-lock">🔒</div>
+        <h2>Syllabus Manager</h2>
+        <p className="muted">এই অংশে প্রবেশ করতে পিন দিন।</p>
+        <input
+          type="password"
+          inputMode="numeric"
+          autoFocus
+          className={`gate-input ${error ? 'err' : ''}`}
+          value={pin}
+          placeholder="PIN"
+          onChange={(e) => {
+            setPin(e.target.value)
+            setError(false)
+          }}
+        />
+        {error && <div className="gate-err">ভুল পিন। আবার চেষ্টা করুন।</div>}
+        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+          প্রবেশ করুন
+        </button>
+        <Link to="/" className="muted" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+          ← অ্যাপে ফিরে যান
+        </Link>
+      </form>
+    </div>
+  )
+}
+
+function AdminManager() {
   const user = useUserParams()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -108,6 +162,7 @@ export default function AdminPage() {
           <Link to={`/${user.carry}`} className="btn btn-soft btn-sm">
             অ্যাপ দেখুন
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 

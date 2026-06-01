@@ -5,6 +5,7 @@ import type { Chapter, Section, SubjectWithSyllabus } from '../lib/types'
 import { calculateScore, gradeMessage } from '../lib/scoring'
 import { useUserParams } from '../lib/useUserParams'
 import StatusBanner, { type SaveState } from '../components/StatusBanner'
+import ThemeToggle from '../components/ThemeToggle'
 import ProgressRing from '../components/ProgressRing'
 import ScoreBreakdown from '../components/ScoreBreakdown'
 import StarRating from '../components/StarRating'
@@ -105,10 +106,12 @@ export default function TrackerPage() {
         <>
           <header className="hero">
             <div className="container">
-              <div style={{ paddingTop: 12 }}>
+              <div className="row" style={{ paddingTop: 12 }}>
                 <Link to={`/${user.carry}`} className="btn btn-ghost btn-sm">
                   ← সব বিষয়
                 </Link>
+                <div className="spacer" />
+                <ThemeToggle />
               </div>
               <div className="hero-inner">
                 <ProgressRing percent={score.percent} />

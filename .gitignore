@@ -6,6 +6,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.supabase-dbpass.txt
 .DS_Store
 .vscode/*
 !.vscode/extensions.json

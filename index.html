@@ -14,6 +14,17 @@
     />
   </head>
   <body>
+    <script>
+      // Set theme before paint to avoid a flash of the wrong palette.
+      (function () {
+        try {
+          var saved = localStorage.getItem('hsc2026.theme');
+          var dark = saved ? saved === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

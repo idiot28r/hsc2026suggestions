@@ -4,6 +4,7 @@ import { fetchSubjects, fetchEarnedBySubject } from '../lib/data'
 import { GROUPS, type GroupKey, type Subject } from '../lib/types'
 import { useUserParams } from '../lib/useUserParams'
 import StatusBanner from '../components/StatusBanner'
+import ThemeToggle from '../components/ThemeToggle'
 import { MathText } from '../lib/math'
 
 const GROUP_STORE = 'hsc2026.group'
@@ -70,6 +71,8 @@ export default function SubjectsPage() {
             <h1>Interactive Suggestions</h1>
             <div className="sub">HSC 2026 · তোমার সাজেশন ট্র্যাকার</div>
           </div>
+          <div className="spacer" />
+          <ThemeToggle />
         </div>
       </header>
 
@@ -129,7 +132,7 @@ function SubjectCard({ subject, earned, onOpen }: { subject: Subject; earned?: n
   const earnedInt = Math.floor(earned ?? 0)
   const pct = started && totalPossible > 0 ? Math.min(100, (earnedInt / totalPossible) * 100) : 0
   const hue = Math.round(140 * (pct / 100))
-  const barColor = started ? `hsl(${hue}, 72%, 45%)` : '#cbd5e1'
+  const barColor = started ? `hsl(${hue}, 72%, 45%)` : 'var(--idle-bar)'
 
   return (
     <div className="card subject-card" onClick={onOpen}>
