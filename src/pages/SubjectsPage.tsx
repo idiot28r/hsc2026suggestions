@@ -110,16 +110,22 @@ export default function SubjectsPage() {
             এই গ্রুপে এখনো কোনো বিষয় যুক্ত করা হয়নি।
           </div>
         ) : (
-          <div className="subjects-grid">
-            {visible.map((s) => (
-              <SubjectCard
-                key={s.id}
-                subject={s}
-                earned={earned[s.id]}
-                onOpen={() => navigate(`/subject/${s.id}${user.carry}`)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="list-head">
+              <h2>{GROUPS.find((g) => g.key === group)?.label}</h2>
+              <span className="count">{visible.length} বিষয়</span>
+            </div>
+            <div className="subjects-grid">
+              {visible.map((s) => (
+                <SubjectCard
+                  key={s.id}
+                  subject={s}
+                  earned={earned[s.id]}
+                  onOpen={() => navigate(`/subject/${s.id}${user.carry}`)}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
     </>

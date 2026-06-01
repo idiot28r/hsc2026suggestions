@@ -13,7 +13,8 @@ import {
   dataMode,
   type DbTable,
 } from '../lib/data'
-import type { Chapter, Section, Subject, SubjectWithSyllabus } from '../lib/types'
+import type { Chapter, GroupKey, Section, Subject, SubjectWithSyllabus } from '../lib/types'
+import { GROUPS } from '../lib/types'
 import { useUserParams } from '../lib/useUserParams'
 import StarRating from '../components/StarRating'
 import ThemeToggle from '../components/ThemeToggle'
@@ -119,11 +120,12 @@ function AdminManager() {
     }
   }
 
-  async function addSubject() {
+  async function addSubject(group: GroupKey) {
     const id = prompt('বিষয়ের ছোট আইডি (URL-এ ব্যবহৃত হবে, যেমন: phy1_hsc):')?.trim()
     if (!id) return
+    const rankKey = ({ science: 'rank_science', business: 'rank_business', humanities: 'rank_humanities' } as const)[group]
     try {
-      await createSubject({ id, title: 'নতুন বিষয়', rank_science: 99 })
+      await createSubject({ id, title: 'নতুন বিষয়', [rankKey]: 99 })
       notify('বিষয় যোগ হয়েছে')
       loadGrid()
     } catch (e) {
@@ -175,6 +177,7 @@ function AdminManager() {
             onSave={save}
             onDelete={(id) => remove('subjects', id, loadGrid)}
             onAdd={addSubject}
+            onReload={loadGrid}
           />
         ) : (
           <SyllabusEditor
@@ -257,6 +260,12 @@ function Num({
 
 /* ── Subjects grid ──────────────────────────────────────────────────────────── */
 
+const RANK_KEY: Record<GroupKey, 'rank_science' | 'rank_business' | 'rank_humanities'> = {
+  science: 'rank_science',
+  business: 'rank_business',
+  humanities: 'rank_humanities',
+}
+
 function SubjectsGrid({
   subjects,
   loading,
@@ -264,75 +273,164 @@ function SubjectsGrid({
   onSave,
   onDelete,
   onAdd,
+  onReload,
 }: {
   subjects: Subject[]
   loading: boolean
   onEdit: (id: string) => void
-  onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
+  onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => Promise<void> | void
   onDelete: (id: string) => void
-  onAdd: () => void
+  onAdd: (group: GroupKey) => void
+  onReload: () => void
 }) {
+  const [group, setGroup] = useState<GroupKey>('science')
+  const [assignPick, setAssignPick] = useState('')
+
   if (loading) return <div className="empty">লোড হচ্ছে…</div>
+
+  const key = RANK_KEY[group]
+  const inGroup = subjects
+    .filter((s) => s[key] != null)
+    .sort((a, b) => (a[key] as number) - (b[key] as number))
+  const unassigned = subjects.filter((s) => s[key] == null)
+  const nextRank = (k: typeof key) => {
+    const peers = subjects.filter((s) => s[k] != null).map((s) => s[k] as number)
+    return (peers.length ? Math.max(...peers) : 0) + 1
+  }
+
+  async function move(index: number, dir: -1 | 1) {
+    const target = index + dir
+    if (target < 0 || target >= inGroup.length) return
+    const a = inGroup[index]
+    const b = inGroup[target]
+    await onSave('subjects', a.id, { [key]: b[key] })
+    await onSave('subjects', b.id, { [key]: a[key] })
+    onReload()
+  }
+
+  async function toggleGroup(s: Subject, g: GroupKey) {
+    const k = RANK_KEY[g]
+    await onSave('subjects', s.id, { [k]: s[k] == null ? nextRank(k) : null })
+    onReload()
+  }
+
+  async function assign() {
+    if (!assignPick) return
+    await onSave('subjects', assignPick, { [key]: nextRank(key) })
+    setAssignPick('')
+    onReload()
+  }
+
+  const groupLabel = GROUPS.find((g) => g.key === group)?.label
 
   return (
     <>
-      <p className="muted" style={{ margin: '18px 0 4px', fontSize: '0.85rem' }}>
-        যেকোনো লেখা বা সংখ্যায় ক্লিক করে সম্পাদনা করুন। গ্রুপ র‍্যাঙ্ক ফাঁকা রাখলে ঐ গ্রুপে দেখাবে না।
-      </p>
-      <div className="subjects-grid">
-        {subjects.map((s) => (
-          <div key={s.id} className="card subject-card" style={{ cursor: 'default' }}>
-            <button className="del-x" style={{ position: 'absolute', top: 12, right: 12 }} onClick={() => onDelete(s.id)}>
-              ✕
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '18px 0 8px' }}>
+        <div className="segment" role="tablist">
+          {GROUPS.map((g) => (
+            <button key={g.key} className={group === g.key ? 'active' : ''} onClick={() => setGroup(g.key)} role="tab">
+              {g.emoji} {g.label}
             </button>
-            <div className="top">
-              <Text
-                value={s.icon_emoji || '📘'}
-                onSave={(v) => onSave('subjects', s.id, { icon_emoji: v })}
-                style={{ width: 50, fontSize: '1.5rem', textAlign: 'center' }}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text value={s.title} onSave={(v) => onSave('subjects', s.id, { title: v })} style={{ fontWeight: 800 }} />
-                <Text
-                  value={s.short_code || ''}
-                  placeholder="short code"
-                  onSave={(v) => onSave('subjects', s.id, { short_code: v })}
-                  style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}
-                />
-              </div>
-            </div>
-
-            <div className="mark-pills">
-              <Pill label="Max CQ" value={s.max_cq} onSave={(v) => onSave('subjects', s.id, { max_cq: v })} />
-              <Pill label="Max MCQ" value={s.max_mcq} onSave={(v) => onSave('subjects', s.id, { max_mcq: v })} />
-              <Pill label="Max SQ" value={s.max_sq} warn onSave={(v) => onSave('subjects', s.id, { max_sq: v })} />
-            </div>
-
-            <div className="row" style={{ gap: 8, fontSize: '0.72rem', flexWrap: 'wrap' }}>
-              <RankField label="🔬" value={s.rank_science} onSave={(v) => onSave('subjects', s.id, { rank_science: v })} />
-              <RankField label="📊" value={s.rank_business} onSave={(v) => onSave('subjects', s.id, { rank_business: v })} />
-              <RankField label="🌍" value={s.rank_humanities} onSave={(v) => onSave('subjects', s.id, { rank_humanities: v })} />
-              <label className="row" style={{ gap: 4, marginLeft: 'auto', fontWeight: 700 }}>
-                <input
-                  type="checkbox"
-                  className="chk"
-                  style={{ width: 16, height: 16 }}
-                  checked={s.is_active}
-                  onChange={(e) => onSave('subjects', s.id, { is_active: e.target.checked })}
-                />
-                Active
-              </label>
-            </div>
-
-            <button className="btn btn-soft btn-sm" onClick={() => onEdit(s.id)}>
-              অধ্যায় ও টপিক সম্পাদনা →
-            </button>
-          </div>
-        ))}
-        <button className="dashed-add" onClick={onAdd}>
-          + নতুন বিষয় যোগ করুন
-        </button>
+          ))}
+        </div>
       </div>
+      <p className="muted" style={{ margin: '4px 2px 12px', fontSize: '0.82rem' }}>
+        ↑/↓ দিয়ে এই গ্রুপে বিষয়ের ক্রম সাজাও · গ্রুপ চিপে ক্লিক করে কোন গ্রুপে দেখাবে ঠিক করো · লেখা/সংখ্যায় ক্লিক করে সম্পাদনা করো।
+      </p>
+
+      {unassigned.length > 0 && (
+        <div className="card assign-bar">
+          <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>এই গ্রুপে যোগ করো:</span>
+          <select className="assign-select" value={assignPick} onChange={(e) => setAssignPick(e.target.value)}>
+            <option value="">— বিষয় বাছাই করো —</option>
+            {unassigned.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-soft btn-sm" onClick={assign} disabled={!assignPick}>
+            যোগ করো
+          </button>
+        </div>
+      )}
+
+      {inGroup.length === 0 ? (
+        <div className="empty">এই গ্রুপে কোনো বিষয় নেই। উপরের বার থেকে যোগ করো বা নিচে নতুন বিষয় তৈরি করো।</div>
+      ) : (
+        <div className="subjects-grid">
+          {inGroup.map((s, i) => (
+            <div key={s.id} className="card subject-card" style={{ cursor: 'default' }}>
+              <button className="del-x" style={{ position: 'absolute', top: 12, right: 12 }} onClick={() => onDelete(s.id)}>
+                ✕
+              </button>
+
+              <div className="card-toolbar">
+                <button className="reorder-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label="উপরে তোলো">
+                  ↑
+                </button>
+                <span className="rank-pos">#{i + 1}</span>
+                <button className="reorder-btn" disabled={i === inGroup.length - 1} onClick={() => move(i, 1)} aria-label="নিচে নামাও">
+                  ↓
+                </button>
+              </div>
+
+              <div className="top">
+                <Text
+                  value={s.icon_emoji || '📘'}
+                  onSave={(v) => onSave('subjects', s.id, { icon_emoji: v })}
+                  style={{ width: 50, fontSize: '1.5rem', textAlign: 'center' }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text value={s.title} onSave={(v) => onSave('subjects', s.id, { title: v })} style={{ fontWeight: 800 }} />
+                  <Text
+                    value={s.short_code || ''}
+                    placeholder="short code"
+                    onSave={(v) => onSave('subjects', s.id, { short_code: v })}
+                    style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}
+                  />
+                </div>
+              </div>
+
+              <div className="mark-pills">
+                <Pill label="Max CQ" value={s.max_cq} onSave={(v) => onSave('subjects', s.id, { max_cq: v })} />
+                <Pill label="Max MCQ" value={s.max_mcq} onSave={(v) => onSave('subjects', s.id, { max_mcq: v })} />
+                <Pill label="Max SQ" value={s.max_sq} warn onSave={(v) => onSave('subjects', s.id, { max_sq: v })} />
+              </div>
+
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                {GROUPS.map((g) => (
+                  <button
+                    key={g.key}
+                    className={`group-chip ${s[RANK_KEY[g.key]] != null ? 'on' : ''}`}
+                    onClick={() => toggleGroup(s, g.key)}
+                    title={`${g.label}-এ ${s[RANK_KEY[g.key]] != null ? 'দেখানো হচ্ছে' : 'দেখানো হচ্ছে না'}`}
+                  >
+                    {g.emoji}
+                  </button>
+                ))}
+                <label className="row" style={{ gap: 4, marginLeft: 'auto', fontWeight: 700, fontSize: '0.72rem' }}>
+                  <input
+                    type="checkbox"
+                    className="chk"
+                    style={{ width: 16, height: 16 }}
+                    checked={s.is_active}
+                    onChange={(e) => onSave('subjects', s.id, { is_active: e.target.checked })}
+                  />
+                  Active
+                </label>
+              </div>
+
+              <button className="btn btn-soft btn-sm" onClick={() => onEdit(s.id)}>
+                অধ্যায় ও টপিক সম্পাদনা →
+              </button>
+            </div>
+          ))}
+          <button className="dashed-add" onClick={() => onAdd(group)}>
+            + নতুন বিষয় ({groupLabel})
+          </button>
+        </div>
+      )}
     </>
   )
 }
@@ -343,27 +441,6 @@ function Pill({ label, value, onSave, warn }: { label: string; value: number; on
       <div className="k">{label}</div>
       <Num value={value} onSave={onSave} style={{ fontSize: '1.05rem', fontWeight: 800, width: 50 }} />
     </div>
-  )
-}
-
-function RankField({ label, value, onSave }: { label: string; value: number | null; onSave: (v: number | null) => void }) {
-  const [v, setV] = useState(value === null ? '' : String(value))
-  useEffect(() => setV(value === null ? '' : String(value)), [value])
-  return (
-    <span className="row" style={{ gap: 2 }} title="গ্রুপ র‍্যাঙ্ক (ফাঁকা = লুকানো)">
-      {label}
-      <input
-        className="editable num"
-        style={{ width: 38 }}
-        value={v}
-        placeholder="—"
-        onChange={(e) => setV(e.target.value)}
-        onBlur={() => {
-          const next = v.trim() === '' ? null : Number(v)
-          if (next !== value) onSave(next)
-        }}
-      />
-    </span>
   )
 }
 
@@ -482,13 +559,17 @@ function ChapterEditor({
   reload: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const totalWeight = chapter.topics.reduce((sum, t) => sum + (Number(t.weight) || 0), 0)
   return (
     <div className="chapter" style={{ marginBottom: 8 }}>
       <div className="chapter-head">
-        <span className={`chev ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)}>
-          ▶
+        <span className={`chev ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)} aria-hidden="true">
+          <Chevron />
         </span>
         <Text value={chapter.title} onSave={(v) => onSave('chapters', chapter.id, { title: v })} style={{ fontWeight: 700 }} />
+        <span className="weight-tally" title={`${chapter.topics.length} টপিকের মোট গুরুত্ব`}>
+          Σ {totalWeight}
+        </span>
         <span className="row" style={{ gap: 4, fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
           MCQ
           <Num value={chapter.est_mcq} onSave={(v) => onSave('chapters', chapter.id, { est_mcq: v })} style={{ width: 40 }} />
@@ -527,6 +608,14 @@ function ChapterEditor({
         </ul>
       )}
     </div>
+  )
+}
+
+function Chevron() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   )
 }
 

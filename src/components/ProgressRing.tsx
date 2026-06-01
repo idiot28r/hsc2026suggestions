@@ -1,5 +1,5 @@
-export default function ProgressRing({ percent, size = 92 }: { percent: number; size?: number }) {
-  const stroke = 9
+export default function ProgressRing({ percent, size = 64 }: { percent: number; size?: number }) {
+  const stroke = 7
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const pct = Math.max(0, Math.min(100, percent))
@@ -27,7 +27,6 @@ export default function ProgressRing({ percent, size = 92 }: { percent: number; 
       </svg>
       <div className="pct">
         <b style={{ color }}>{pct}%</b>
-        <span>প্রস্তুতি</span>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchSyllabus, fetchCompletedTopics, saveProgress, dataMode } from '../lib/data'
 import type { Chapter, Section, SubjectWithSyllabus } from '../lib/types'
@@ -194,6 +194,8 @@ function ChapterRow({
 }) {
   const [open, setOpen] = useState(false)
   const checkRef = useRef<HTMLInputElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
+  const [maxH, setMaxH] = useState(0)
 
   const doneCount = chapter.topics.filter((t) => completed.has(t.id)).length
   const allDone = chapter.topics.length > 0 && doneCount === chapter.topics.length
@@ -203,12 +205,16 @@ function ChapterRow({
     if (checkRef.current) checkRef.current.indeterminate = someDone
   }, [someDone])
 
+  // Animate the panel to its exact content height (robust across engines).
+  useLayoutEffect(() => {
+    setMaxH(open && innerRef.current ? innerRef.current.scrollHeight : 0)
+  }, [open, chapter.topics.length])
+
+  const pct = chapter.topics.length > 0 ? (doneCount / chapter.topics.length) * 100 : 0
+
   return (
-    <div className="chapter">
-      <div className="chapter-head">
-        <span className={`chev ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)}>
-          ▶
-        </span>
+    <div className={`chapter ${open ? 'open' : ''}`}>
+      <div className="chapter-head" onClick={() => setOpen((o) => !o)}>
         <input
           ref={checkRef}
           type="checkbox"
@@ -216,8 +222,9 @@ function ChapterRow({
           checked={allDone}
           onChange={(e) => onToggleChapter(chapter, e.target.checked)}
           onClick={(e) => e.stopPropagation()}
+          aria-label="অধ্যায়ের সব টপিক"
         />
-        <div className={`chapter-title ${allDone ? 'done' : ''}`} onClick={() => setOpen((o) => !o)}>
+        <div className={`chapter-title ${allDone ? 'done' : ''}`}>
           <MathText text={chapter.title} />
         </div>
         {doneCount > 0 ? (
@@ -233,10 +240,18 @@ function ChapterRow({
             )}
           </span>
         )}
+        <span className={`chev ${open ? 'open' : ''}`} aria-hidden="true">
+          <Chevron />
+        </span>
+        {doneCount > 0 && (
+          <span className="chapter-progress">
+            <i style={{ width: `${pct}%` }} />
+          </span>
+        )}
       </div>
 
-      <div className={`topic-wrap ${open ? 'open' : ''}`}>
-        <div className="topic-wrap-inner">
+      <div className={`topic-wrap ${open ? 'open' : ''}`} style={{ maxHeight: maxH }}>
+        <div className="topic-wrap-inner" ref={innerRef}>
           <ul className="topic-list">
             {chapter.topics.map((t) => {
               const done = completed.has(t.id)
@@ -255,6 +270,14 @@ function ChapterRow({
         </div>
       </div>
     </div>
+  )
+}
+
+function Chevron() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   )
 }
 

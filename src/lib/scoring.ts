@@ -77,13 +77,12 @@ export function calculateScore(
   return { finalCQ, finalMCQ, finalSQ, finalScore, totalPossible, percent }
 }
 
-/** Star count (1–5) for a topic importance weight. */
+/** Star count for a topic importance weight. Mirrors the SSC 3-tier scale:
+ *  high (≥80) → 5★, medium (≥40) → 3★, low → 1★. */
 export function starsForWeight(weight: number): number {
   const w = num(weight)
   if (w >= 80) return 5
-  if (w >= 60) return 4
   if (w >= 40) return 3
-  if (w >= 20) return 2
   return 1
 }
 

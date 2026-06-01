@@ -1,13 +1,10 @@
 import type { ScoreResult, SubjectWithSyllabus } from '../lib/types'
 
 interface Seg {
-  key: string
+  key: 'cq' | 'mcq' | 'sq'
   label: string
   earned: number
   max: number
-  bg: string
-  fill: string
-  text: string
 }
 
 export default function ScoreBreakdown({
@@ -18,9 +15,9 @@ export default function ScoreBreakdown({
   subject: SubjectWithSyllabus
 }) {
   const segs: Seg[] = [
-    { key: 'cq', label: 'CQ', earned: score.finalCQ, max: subject.max_cq, bg: '#e0e7ff', fill: '#4f46e5', text: '#1e3a8a' },
-    { key: 'mcq', label: 'MCQ', earned: score.finalMCQ, max: subject.max_mcq, bg: '#d1fae5', fill: '#10b981', text: '#064e3b' },
-    { key: 'sq', label: 'SQ', earned: score.finalSQ, max: subject.max_sq, bg: '#fef3c7', fill: '#f59e0b', text: '#78350f' },
+    { key: 'cq' as const, label: 'CQ', earned: score.finalCQ, max: subject.max_cq },
+    { key: 'mcq' as const, label: 'MCQ', earned: score.finalMCQ, max: subject.max_mcq },
+    { key: 'sq' as const, label: 'SQ', earned: score.finalSQ, max: subject.max_sq },
   ].filter((s) => s.max > 0)
 
   const total = score.totalPossible || 1
@@ -30,7 +27,7 @@ export default function ScoreBreakdown({
       <div className="score-line">
         <span>আনুমানিক নম্বর</span>
         <span>
-          {Math.trunc(score.finalScore)} / {score.totalPossible}
+          <b>{Math.trunc(score.finalScore)}</b> / {score.totalPossible}
         </span>
       </div>
       <div className="breakdown">
@@ -39,12 +36,12 @@ export default function ScoreBreakdown({
           return (
             <div
               key={s.key}
-              className="seg"
-              style={{ flexBasis: `${(s.max / total) * 100}%`, background: s.bg }}
+              className={`seg ${s.key}`}
+              style={{ flexBasis: `${(s.max / total) * 100}%` }}
               title={`${s.label}: ${Math.trunc(s.earned)} / ${s.max}`}
             >
-              <div className="fill" style={{ width: `${fillPct}%`, background: s.fill }} />
-              <div className="lbl" style={{ color: s.text }}>
+              <div className="fill" style={{ width: `${fillPct}%` }} />
+              <div className="lbl">
                 {s.label} {Math.trunc(s.earned)}/{s.max}
               </div>
             </div>

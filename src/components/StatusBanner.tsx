@@ -1,14 +1,23 @@
 import type { UserParams } from '../lib/useUserParams'
+import { dataMode } from '../lib/data'
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 /**
- * Student-facing status strip. Inside the brritto in-app browser a logged-in
- * student sees only their name + live save status. Guests (and local dev) get
- * no banner at all — the student side carries no debug/demo messaging.
+ * Student-facing status strip. A logged-in student sees their name + live save
+ * status. A guest (no phone) is warned their progress isn't being saved — except
+ * in local demo mode, where guest progress persists to localStorage anyway.
  */
 export default function StatusBanner({ user, saveState }: { user: UserParams; saveState?: SaveState }) {
-  if (user.isGuest) return null
+  if (user.isGuest) {
+    if (dataMode === 'local') return null
+    return (
+      <div className="banner guest">
+        <span className="dot" style={{ background: 'currentColor' }} />
+        ⚠️ গেস্ট মোড — তোমার অগ্রগতি সংরক্ষণ হচ্ছে না
+      </div>
+    )
+  }
 
   let tail = ''
   if (saveState === 'saving') tail = ' · ⏳ সংরক্ষণ হচ্ছে…'
