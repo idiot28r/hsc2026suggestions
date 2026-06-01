@@ -163,8 +163,17 @@ function SectionBlock({
           <MathText text={section.title} />
         </h3>
         {section.total_cq_available > 0 && (
-          <span className="cq-badge">
-            CQ: যেকোনো {section.min_cq_required}/{section.total_cq_available}
+          <span
+            className={`cq-badge ${section.min_cq_required > 0 ? '' : 'optional'}`}
+            title={
+              section.min_cq_required > 0
+                ? `এই অংশের ${section.total_cq_available}টি সৃজনশীল প্রশ্ন থেকে অন্তত ${section.min_cq_required}টির উত্তর আবশ্যক`
+                : `এই অংশের অধ্যায়গুলো থেকে ${section.total_cq_available}টি সৃজনশীল প্রশ্ন আসবে (উত্তর দেওয়া বাধ্যতামূলক নয়)`
+            }
+          >
+            {section.min_cq_required > 0
+              ? `CQ: ${section.total_cq_available}টির মধ্যে ${section.min_cq_required}টি আবশ্যক`
+              : `CQ: ${section.total_cq_available}টি প্রশ্ন আসবে`}
           </span>
         )}
       </div>
