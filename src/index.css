@@ -482,6 +482,8 @@ a { color: inherit; text-decoration: none; }
 .drag-handle:hover { color: var(--primary); background: var(--surface-2); }
 .drag-handle:active { cursor: grabbing; }
 .chapter-dragging { opacity: .45; }
+.chapter.drop-top { box-shadow: inset 0 3px 0 0 var(--primary), var(--shadow-sm); }
+.chapter.drop-bottom { box-shadow: inset 0 -3px 0 0 var(--primary), var(--shadow-sm); }
 .section-drop-active { outline: 2px dashed var(--primary); outline-offset: -2px; background: var(--primary-soft); }
 
 .group-chip {

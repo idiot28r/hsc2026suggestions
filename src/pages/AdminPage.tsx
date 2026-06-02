@@ -603,6 +603,18 @@ function SyllabusEditor({
     setSyllabus((s) => (s ? { ...s, sections: next } : s))
   }
 
+  // Drop a dragged chapter just before/after a reference chapter (handles the
+  // index shift when both are in the same group).
+  function dropOnChapter(draggedId: string, refChapterId: string, after: boolean) {
+    if (draggedId === refChapterId) return
+    const refSec = sections.find((s) => s.chapters.some((c) => c.id === refChapterId))
+    if (!refSec) return
+    const arrangeRef = refSec.chapters.filter((c) => c.id !== draggedId)
+    const refIdx = arrangeRef.findIndex((c) => c.id === refChapterId)
+    if (refIdx < 0) return
+    moveChapterTo(draggedId, refSec.id, after ? refIdx + 1 : refIdx)
+  }
+
   return (
     <div style={{ paddingTop: 16 }}>
       <div className="row" style={{ marginBottom: 14 }}>
@@ -627,6 +639,7 @@ function SyllabusEditor({
           draggingId={draggingId}
           setDraggingId={setDraggingId}
           onMoveChapter={moveChapterTo}
+          onDropChapter={dropOnChapter}
           onSave={onSave}
           onDelete={onDelete}
           reload={reload}
@@ -722,6 +735,7 @@ function SectionEditor({
   draggingId,
   setDraggingId,
   onMoveChapter,
+  onDropChapter,
   onSave,
   onDelete,
   reload,
@@ -733,6 +747,7 @@ function SectionEditor({
   draggingId: string | null
   setDraggingId: (id: string | null) => void
   onMoveChapter: (chapterId: string, targetSectionId: string, targetIndex: number) => void
+  onDropChapter: (draggedId: string, refChapterId: string, after: boolean) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
@@ -810,16 +825,13 @@ function SectionEditor({
       <div className={`section-rule-hint ${bad ? 'bad' : ''}`}>{hint}</div>
 
       <div style={{ padding: 6 }}>
-        {chapters.map((chap, ci) => (
+        {chapters.map((chap) => (
           <ChapterEditor
             key={chap.id}
             chapter={chap}
-            index={ci}
-            count={chapters.length}
-            sectionId={section.id}
-            onMove={(dir) => onMoveChapter(chap.id, section.id, ci + dir)}
-            isDragging={draggingId === chap.id}
+            draggingId={draggingId}
             setDraggingId={setDraggingId}
+            onDropChapter={onDropChapter}
             onSave={onSave}
             onDelete={onDelete}
             reload={reload}
@@ -841,54 +853,70 @@ function SectionEditor({
 
 function ChapterEditor({
   chapter,
-  index,
-  count,
-  sectionId,
-  onMove,
-  isDragging,
+  draggingId,
   setDraggingId,
+  onDropChapter,
   onSave,
   onDelete,
   reload,
 }: {
   chapter: Chapter
-  index: number
-  count: number
-  sectionId: string
-  onMove: (dir: -1 | 1) => void
-  isDragging: boolean
+  draggingId: string | null
   setDraggingId: (id: string | null) => void
+  onDropChapter: (draggedId: string, refChapterId: string, after: boolean) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [dropEdge, setDropEdge] = useState<'top' | 'bottom' | null>(null)
   const rowRef = useRef<HTMLDivElement>(null)
   const totalWeight = chapter.topics.reduce((sum, t) => sum + (Number(t.weight) || 0), 0)
+  const isDragging = draggingId === chapter.id
+  const canDrop = draggingId != null && draggingId !== chapter.id
+
   return (
-    <div ref={rowRef} className={`chapter ${isDragging ? 'chapter-dragging' : ''}`} style={{ marginBottom: 8 }} data-section={sectionId}>
+    <div
+      ref={rowRef}
+      className={`chapter ${isDragging ? 'chapter-dragging' : ''} ${dropEdge ? 'drop-' + dropEdge : ''}`}
+      style={{ marginBottom: 8 }}
+      onDragOver={(e) => {
+        if (!canDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        const r = e.currentTarget.getBoundingClientRect()
+        setDropEdge(e.clientY < r.top + r.height / 2 ? 'top' : 'bottom')
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropEdge(null)
+      }}
+      onDrop={(e) => {
+        if (!canDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        const id = e.dataTransfer.getData('text/plain') || draggingId
+        const after = dropEdge === 'bottom'
+        setDropEdge(null)
+        if (id) onDropChapter(id, chapter.id, after)
+      }}
+    >
       <div className="chapter-head">
         <span
           className="drag-handle"
           draggable
-          title="টেনে অন্য গ্রুপে নিন"
+          title="টেনে সাজান বা অন্য গ্রুপে নিন"
           onDragStart={(e) => {
             e.dataTransfer.setData('text/plain', chapter.id)
             e.dataTransfer.effectAllowed = 'move'
             if (rowRef.current) e.dataTransfer.setDragImage(rowRef.current, 16, 16)
             setDraggingId(chapter.id)
           }}
-          onDragEnd={() => setDraggingId(null)}
+          onDragEnd={() => {
+            setDraggingId(null)
+            setDropEdge(null)
+          }}
         >
           ⠿
-        </span>
-        <span className="section-reorder">
-          <button className="reorder-btn" disabled={index === 0} onClick={() => onMove(-1)} aria-label="অধ্যায় উপরে তোলো">
-            ↑
-          </button>
-          <button className="reorder-btn" disabled={index === count - 1} onClick={() => onMove(1)} aria-label="অধ্যায় নিচে নামাও">
-            ↓
-          </button>
         </span>
         <span className={`chev ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)} aria-hidden="true">
           <Chevron />
