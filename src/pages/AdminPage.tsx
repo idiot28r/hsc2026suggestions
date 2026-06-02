@@ -500,6 +500,20 @@ function SyllabusEditor({
 }) {
   if (!syllabus) return <div className="empty">সিলেবাস লোড হচ্ছে…</div>
 
+  const sections = syllabus.sections
+  // Reorder groups: renumber sort_order by the new array position (robust against
+  // duplicate/legacy sort_order values), then reload.
+  async function moveSection(index: number, dir: -1 | 1) {
+    const target = index + dir
+    if (target < 0 || target >= sections.length) return
+    const arr = [...sections]
+    ;[arr[index], arr[target]] = [arr[target], arr[index]]
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].sort_order !== i) await onSave('sections', arr[i].id, { sort_order: i })
+    }
+    reload()
+  }
+
   return (
     <div style={{ paddingTop: 16 }}>
       <div className="row" style={{ marginBottom: 14 }}>
@@ -514,8 +528,17 @@ function SyllabusEditor({
 
       <CqRuleBar syllabus={syllabus} subjectId={subjectId} onSave={onSave} />
 
-      {syllabus.sections.map((sec) => (
-        <SectionEditor key={sec.id} section={sec} onSave={onSave} onDelete={onDelete} reload={reload} />
+      {sections.map((sec, i) => (
+        <SectionEditor
+          key={sec.id}
+          section={sec}
+          index={i}
+          count={sections.length}
+          onMove={(dir) => moveSection(i, dir)}
+          onSave={onSave}
+          onDelete={onDelete}
+          reload={reload}
+        />
       ))}
 
       <button
@@ -601,11 +624,17 @@ function CqRuleBar({
 
 function SectionEditor({
   section,
+  index,
+  count,
+  onMove,
   onSave,
   onDelete,
   reload,
 }: {
   section: Section
+  index: number
+  count: number
+  onMove: (dir: -1 | 1) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
@@ -630,7 +659,17 @@ function SectionEditor({
   return (
     <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
       <div className="section-bar" style={{ background: 'var(--surface-2)', padding: 12, borderBottom: '1px solid var(--border)' }}>
-        <Text value={section.title} placeholder="গ্রুপ / বিভাগের নাম" onSave={(v) => onSave('sections', section.id, { title: v })} style={{ fontWeight: 800, color: 'var(--primary-700)' }} />
+        <span className="row" style={{ gap: 8, flex: 1, minWidth: 0 }}>
+          <span className="section-reorder">
+            <button className="reorder-btn" disabled={index === 0} onClick={() => onMove(-1)} aria-label="গ্রুপ উপরে তোলো">
+              ↑
+            </button>
+            <button className="reorder-btn" disabled={index === count - 1} onClick={() => onMove(1)} aria-label="গ্রুপ নিচে নামাও">
+              ↓
+            </button>
+          </span>
+          <Text value={section.title} placeholder="গ্রুপ / বিভাগের নাম" onSave={(v) => onSave('sections', section.id, { title: v })} style={{ fontWeight: 800, color: 'var(--primary-700)' }} />
+        </span>
         <span className="row" style={{ gap: 10, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
           <label className="seg-field" title="এই গ্রুপ থেকে কমপক্ষে কয়টি সৃজনশীলের উত্তর দিতে হবে। ০ দিলে এই গ্রুপ থেকে উত্তর দেওয়া বাধ্যতামূলক নয়।">
             আবশ্যক উত্তর
