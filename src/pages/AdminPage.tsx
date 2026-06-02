@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
   fetchSubjects,
@@ -97,6 +97,29 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+/** Returns a copy of the syllabus tree with `patch` applied to the row matching
+ *  `table`/`id` — powers optimistic admin edits (changes show immediately). */
+function patchTree(
+  syl: SubjectWithSyllabus | null,
+  table: DbTable,
+  id: string,
+  patch: Record<string, unknown>,
+): SubjectWithSyllabus | null {
+  if (!syl) return syl
+  const next = structuredClone(syl) as SubjectWithSyllabus
+  if (table === 'subjects' && next.id === id) Object.assign(next, patch)
+  for (const sec of next.sections) {
+    if (table === 'sections' && sec.id === id) Object.assign(sec, patch)
+    for (const chap of sec.chapters) {
+      if (table === 'chapters' && chap.id === id) Object.assign(chap, patch)
+      for (const top of chap.topics) {
+        if (table === 'topics' && top.id === id) Object.assign(top, patch)
+      }
+    }
+  }
+  return next
+}
+
 function AdminManager({ onLogout }: { onLogout?: () => void }) {
   const user = useUserParams()
   const [subjects, setSubjects] = useState<Subject[]>([])
@@ -126,10 +149,17 @@ function AdminManager({ onLogout }: { onLogout?: () => void }) {
   }, [])
 
   async function save(table: DbTable, id: string, patch: Record<string, unknown>) {
+    // Optimistically reflect the change on screen at once (stars, validation,
+    // badges…), then persist. On failure, reload to revert to the DB truth.
+    setSyllabus((s) => patchTree(s, table, id, patch))
+    if (table === 'subjects') {
+      setSubjects((list) => list.map((s) => (s.id === id ? { ...s, ...patch } : s)))
+    }
     try {
       await updateRecord(table, id, patch)
     } catch (e) {
       notify('সংরক্ষণ ব্যর্থ: ' + (e as Error).message, 'err')
+      if (activeId) setSyllabus(await fetchSyllabus(activeId))
     }
   }
 
@@ -498,6 +528,8 @@ function SyllabusEditor({
   reload: () => void
   notify: (t: string, k?: ToastMsg['kind']) => void
 }) {
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+
   if (!syllabus) return <div className="empty">সিলেবাস লোড হচ্ছে…</div>
 
   const sections = syllabus.sections
@@ -511,6 +543,47 @@ function SyllabusEditor({
     for (let i = 0; i < arr.length; i++) {
       if (arr[i].sort_order !== i) await onSave('sections', arr[i].id, { sort_order: i })
     }
+    reload()
+  }
+
+  // Drag-and-drop: move a chapter into `targetSectionId` at `targetIndex`
+  // (works within a group for reordering and across groups). Renumbers the
+  // affected groups' sort_order and updates section_id, then reloads.
+  async function moveChapterTo(chapterId: string, targetSectionId: string, targetIndex: number) {
+    let sourceSec: Section | undefined
+    let chap: Chapter | undefined
+    for (const s of sections) {
+      const c = s.chapters.find((c) => c.id === chapterId)
+      if (c) {
+        sourceSec = s
+        chap = c
+        break
+      }
+    }
+    const targetSec = sections.find((s) => s.id === targetSectionId)
+    if (!chap || !sourceSec || !targetSec) return
+
+    if (sourceSec.id === targetSectionId) {
+      const arr = sourceSec.chapters.filter((c) => c.id !== chapterId)
+      arr.splice(Math.min(Math.max(targetIndex, 0), arr.length), 0, chap)
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].sort_order !== i) await onSave('chapters', arr[i].id, { sort_order: i })
+      }
+    } else {
+      const src = sourceSec.chapters.filter((c) => c.id !== chapterId)
+      for (let i = 0; i < src.length; i++) {
+        if (src[i].sort_order !== i) await onSave('chapters', src[i].id, { sort_order: i })
+      }
+      const tgt = [...targetSec.chapters]
+      tgt.splice(Math.min(Math.max(targetIndex, 0), tgt.length), 0, chap)
+      for (let i = 0; i < tgt.length; i++) {
+        const patch: Record<string, unknown> = {}
+        if (tgt[i].id === chapterId) patch.section_id = targetSectionId
+        if (tgt[i].sort_order !== i || tgt[i].id === chapterId) patch.sort_order = i
+        if (Object.keys(patch).length) await onSave('chapters', tgt[i].id, patch)
+      }
+    }
+    setDraggingId(null)
     reload()
   }
 
@@ -535,7 +608,9 @@ function SyllabusEditor({
           index={i}
           count={sections.length}
           onMove={(dir) => moveSection(i, dir)}
-          allSections={sections}
+          draggingId={draggingId}
+          setDraggingId={setDraggingId}
+          onMoveChapter={moveChapterTo}
           onSave={onSave}
           onDelete={onDelete}
           reload={reload}
@@ -628,7 +703,9 @@ function SectionEditor({
   index,
   count,
   onMove,
-  allSections,
+  draggingId,
+  setDraggingId,
+  onMoveChapter,
   onSave,
   onDelete,
   reload,
@@ -637,40 +714,23 @@ function SectionEditor({
   index: number
   count: number
   onMove: (dir: -1 | 1) => void
-  allSections: Section[]
+  draggingId: string | null
+  setDraggingId: (id: string | null) => void
+  onMoveChapter: (chapterId: string, targetSectionId: string, targetIndex: number) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
 }) {
   const [min, setMin] = useState(Number(section.min_cq_required))
   const [avail, setAvail] = useState(Number(section.total_cq_available))
+  const [dropActive, setDropActive] = useState(false)
   useEffect(() => {
     setMin(Number(section.min_cq_required))
     setAvail(Number(section.total_cq_available))
   }, [section.min_cq_required, section.total_cq_available])
 
   const chapters = section.chapters
-  const otherSections = allSections.filter((s) => s.id !== section.id)
-
-  // Reorder chapters within this group.
-  async function moveChapter(ci: number, dir: -1 | 1) {
-    const target = ci + dir
-    if (target < 0 || target >= chapters.length) return
-    const arr = [...chapters]
-    ;[arr[ci], arr[target]] = [arr[target], arr[ci]]
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].sort_order !== i) await onSave('chapters', arr[i].id, { sort_order: i })
-    }
-    reload()
-  }
-
-  // Move a chapter to a different group (append to the end of the target).
-  async function moveChapterToSection(chapterId: string, targetSectionId: string) {
-    const target = allSections.find((s) => s.id === targetSectionId)
-    const newOrder = target ? target.chapters.length : 999
-    await onSave('chapters', chapterId, { section_id: targetSectionId, sort_order: newOrder })
-    reload()
-  }
+  const draggedHere = draggingId != null && chapters.some((c) => c.id === draggingId)
 
   let hint = ''
   let bad = false
@@ -683,7 +743,27 @@ function SectionEditor({
   }
 
   return (
-    <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
+    <div
+      className={`card ${dropActive ? 'section-drop-active' : ''}`}
+      style={{ marginBottom: 16, overflow: 'hidden' }}
+      onDragOver={(e) => {
+        if (draggingId && !draggedHere) {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+          setDropActive(true)
+        }
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropActive(false)
+      }}
+      onDrop={(e) => {
+        if (!draggingId || draggedHere) return
+        e.preventDefault()
+        setDropActive(false)
+        const id = e.dataTransfer.getData('text/plain') || draggingId
+        if (id) onMoveChapter(id, section.id, chapters.length)
+      }}
+    >
       <div className="section-bar" style={{ background: 'var(--surface-2)', padding: 12, borderBottom: '1px solid var(--border)' }}>
         <span className="row" style={{ gap: 8, flex: 1, minWidth: 0 }}>
           <span className="section-reorder">
@@ -720,9 +800,10 @@ function SectionEditor({
             chapter={chap}
             index={ci}
             count={chapters.length}
-            onMove={(dir) => moveChapter(ci, dir)}
-            otherSections={otherSections}
-            onMoveToSection={(targetId) => moveChapterToSection(chap.id, targetId)}
+            sectionId={section.id}
+            onMove={(dir) => onMoveChapter(chap.id, section.id, ci + dir)}
+            isDragging={draggingId === chap.id}
+            setDraggingId={setDraggingId}
             onSave={onSave}
             onDelete={onDelete}
             reload={reload}
@@ -746,9 +827,10 @@ function ChapterEditor({
   chapter,
   index,
   count,
+  sectionId,
   onMove,
-  otherSections,
-  onMoveToSection,
+  isDragging,
+  setDraggingId,
   onSave,
   onDelete,
   reload,
@@ -756,18 +838,34 @@ function ChapterEditor({
   chapter: Chapter
   index: number
   count: number
+  sectionId: string
   onMove: (dir: -1 | 1) => void
-  otherSections: Section[]
-  onMoveToSection: (targetSectionId: string) => void
+  isDragging: boolean
+  setDraggingId: (id: string | null) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const rowRef = useRef<HTMLDivElement>(null)
   const totalWeight = chapter.topics.reduce((sum, t) => sum + (Number(t.weight) || 0), 0)
   return (
-    <div className="chapter" style={{ marginBottom: 8 }}>
+    <div ref={rowRef} className={`chapter ${isDragging ? 'chapter-dragging' : ''}`} style={{ marginBottom: 8 }} data-section={sectionId}>
       <div className="chapter-head">
+        <span
+          className="drag-handle"
+          draggable
+          title="টেনে অন্য গ্রুপে নিন"
+          onDragStart={(e) => {
+            e.dataTransfer.setData('text/plain', chapter.id)
+            e.dataTransfer.effectAllowed = 'move'
+            if (rowRef.current) e.dataTransfer.setDragImage(rowRef.current, 16, 16)
+            setDraggingId(chapter.id)
+          }}
+          onDragEnd={() => setDraggingId(null)}
+        >
+          ⠿
+        </span>
         <span className="section-reorder">
           <button className="reorder-btn" disabled={index === 0} onClick={() => onMove(-1)} aria-label="অধ্যায় উপরে তোলো">
             ↑
@@ -784,23 +882,6 @@ function ChapterEditor({
           Σ {totalWeight}
         </span>
         <span className="row" style={{ gap: 4, fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-          {otherSections.length > 0 && (
-            <select
-              className="move-select"
-              value=""
-              title="অন্য গ্রুপে সরাও"
-              onChange={(e) => {
-                if (e.target.value) onMoveToSection(e.target.value)
-              }}
-            >
-              <option value="">⇄ গ্রুপ</option>
-              {otherSections.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
-          )}
           MCQ
           <Num value={chapter.est_mcq} onSave={(v) => onSave('chapters', chapter.id, { est_mcq: v })} style={{ width: 40 }} />
           <span className="sq" style={{ color: 'var(--warn)' }}>SQ</span>

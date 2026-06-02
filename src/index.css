@@ -473,12 +473,16 @@ a { color: inherit; text-decoration: none; }
 .reorder-btn:disabled { opacity: .35; cursor: not-allowed; }
 .rank-pos { font-weight: 800; font-size: 0.82rem; color: var(--text-faint); min-width: 22px; text-align: center; }
 .section-reorder { display: inline-flex; gap: 3px; flex: none; }
-.move-select {
-  font: inherit; font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px;
-  padding: 3px 4px; max-width: 96px; cursor: pointer;
+/* Drag-and-drop: chapter handle, drag ghost, and group drop target */
+.drag-handle {
+  flex: none; cursor: grab; color: var(--text-faint); font-size: 1rem; line-height: 1;
+  padding: 2px 3px; border-radius: 6px; user-select: none; -webkit-user-select: none;
+  touch-action: none;
 }
-.move-select:hover { border-color: var(--border-strong); color: var(--primary); }
+.drag-handle:hover { color: var(--primary); background: var(--surface-2); }
+.drag-handle:active { cursor: grabbing; }
+.chapter-dragging { opacity: .45; }
+.section-drop-active { outline: 2px dashed var(--primary); outline-offset: -2px; background: var(--primary-soft); }
 
 .group-chip {
   width: 34px; height: 30px; border-radius: 9px; border: 1px solid var(--border);
