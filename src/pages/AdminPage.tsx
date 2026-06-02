@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
   fetchSubjects,
@@ -148,6 +149,15 @@ function AdminManager({ onLogout }: { onLogout?: () => void }) {
     setSyllabus(await fetchSyllabus(id))
   }, [])
 
+  // Re-fetch the open subject WITHOUT clearing it first, so React reconciles in
+  // place (keeps open accordions, scroll, focus) instead of remounting.
+  const reloadSyllabus = useCallback(async () => {
+    setActiveId((id) => {
+      if (id) fetchSyllabus(id).then((s) => setSyllabus(s))
+      return id
+    })
+  }, [])
+
   async function save(table: DbTable, id: string, patch: Record<string, unknown>) {
     // Optimistically reflect the change on screen at once (stars, validation,
     // badges…), then persist. On failure, reload to revert to the DB truth.
@@ -248,6 +258,7 @@ function AdminManager({ onLogout }: { onLogout?: () => void }) {
           <SyllabusEditor
             subjectId={activeId}
             syllabus={syllabus}
+            setSyllabus={setSyllabus}
             onBack={() => {
               setActiveId(null)
               setSyllabus(null)
@@ -255,7 +266,7 @@ function AdminManager({ onLogout }: { onLogout?: () => void }) {
             }}
             onSave={save}
             onDelete={remove}
-            reload={() => openSyllabus(activeId)}
+            reload={reloadSyllabus}
             notify={notify}
           />
         )}
@@ -514,6 +525,7 @@ function Pill({ label, value, onSave, warn }: { label: string; value: number; on
 function SyllabusEditor({
   subjectId,
   syllabus,
+  setSyllabus,
   onBack,
   onSave,
   onDelete,
@@ -522,6 +534,7 @@ function SyllabusEditor({
 }: {
   subjectId: string
   syllabus: SubjectWithSyllabus | null
+  setSyllabus: Dispatch<SetStateAction<SubjectWithSyllabus | null>>
   onBack: () => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
@@ -533,58 +546,61 @@ function SyllabusEditor({
   if (!syllabus) return <div className="empty">সিলেবাস লোড হচ্ছে…</div>
 
   const sections = syllabus.sections
-  // Reorder groups: renumber sort_order by the new array position (robust against
-  // duplicate/legacy sort_order values), then reload.
-  async function moveSection(index: number, dir: -1 | 1) {
+  const persist = (id: string, patch: Record<string, unknown>) =>
+    updateRecord('chapters', id, patch).catch(() => {
+      notify('সংরক্ষণ ব্যর্থ', 'err')
+      reload()
+    })
+
+  // Reorder groups in place (no remount): renumber sort_order by the new array
+  // position, update local state instantly, then persist in the background.
+  function moveSection(index: number, dir: -1 | 1) {
     const target = index + dir
     if (target < 0 || target >= sections.length) return
     const arr = [...sections]
-    ;[arr[index], arr[target]] = [arr[target], arr[index]]
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].sort_order !== i) await onSave('sections', arr[i].id, { sort_order: i })
-    }
-    reload()
+    const [moved] = arr.splice(index, 1)
+    arr.splice(target, 0, moved)
+    const next = arr.map((s, i) => (s.sort_order === i ? s : { ...s, sort_order: i }))
+    setSyllabus((s) => (s ? { ...s, sections: next } : s))
+    next.forEach((s, i) => {
+      if (sections.find((o) => o.id === s.id)?.sort_order !== i) {
+        updateRecord('sections', s.id, { sort_order: i }).catch(() => {
+          notify('সংরক্ষণ ব্যর্থ', 'err')
+          reload()
+        })
+      }
+    })
   }
 
-  // Drag-and-drop: move a chapter into `targetSectionId` at `targetIndex`
-  // (works within a group for reordering and across groups). Renumbers the
-  // affected groups' sort_order and updates section_id, then reloads.
-  async function moveChapterTo(chapterId: string, targetSectionId: string, targetIndex: number) {
-    let sourceSec: Section | undefined
+  // Move/reorder a chapter into `targetSectionId` at `targetIndex` (within a
+  // group for reordering, or across groups). Updates local state instantly and
+  // persists only the chapters whose section/order changed.
+  function moveChapterTo(chapterId: string, targetSectionId: string, targetIndex: number) {
+    setDraggingId(null)
     let chap: Chapter | undefined
     for (const s of sections) {
       const c = s.chapters.find((c) => c.id === chapterId)
-      if (c) {
-        sourceSec = s
-        chap = c
-        break
-      }
+      if (c) chap = c
     }
-    const targetSec = sections.find((s) => s.id === targetSectionId)
-    if (!chap || !sourceSec || !targetSec) return
+    if (!chap || !sections.some((s) => s.id === targetSectionId)) return
 
-    if (sourceSec.id === targetSectionId) {
-      const arr = sourceSec.chapters.filter((c) => c.id !== chapterId)
-      arr.splice(Math.min(Math.max(targetIndex, 0), arr.length), 0, chap)
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i].sort_order !== i) await onSave('chapters', arr[i].id, { sort_order: i })
-      }
-    } else {
-      const src = sourceSec.chapters.filter((c) => c.id !== chapterId)
-      for (let i = 0; i < src.length; i++) {
-        if (src[i].sort_order !== i) await onSave('chapters', src[i].id, { sort_order: i })
-      }
-      const tgt = [...targetSec.chapters]
-      tgt.splice(Math.min(Math.max(targetIndex, 0), tgt.length), 0, chap)
-      for (let i = 0; i < tgt.length; i++) {
-        const patch: Record<string, unknown> = {}
-        if (tgt[i].id === chapterId) patch.section_id = targetSectionId
-        if (tgt[i].sort_order !== i || tgt[i].id === chapterId) patch.sort_order = i
-        if (Object.keys(patch).length) await onSave('chapters', tgt[i].id, patch)
-      }
-    }
-    setDraggingId(null)
-    reload()
+    const arrange: Record<string, Chapter[]> = {}
+    for (const s of sections) arrange[s.id] = s.chapters.filter((c) => c.id !== chapterId)
+    const tgt = arrange[targetSectionId]
+    tgt.splice(Math.min(Math.max(targetIndex, 0), tgt.length), 0, chap)
+
+    const next = sections.map((s) => ({
+      ...s,
+      chapters: arrange[s.id].map((c, i) => {
+        const isMoved = c.id === chapterId
+        if (!isMoved && c.sort_order === i) return c
+        const patch: Record<string, unknown> = { sort_order: i }
+        if (isMoved) patch.section_id = targetSectionId
+        persist(c.id, patch)
+        return { ...c, sort_order: i, section_id: isMoved ? targetSectionId : c.section_id }
+      }),
+    }))
+    setSyllabus((s) => (s ? { ...s, sections: next } : s))
   }
 
   return (
