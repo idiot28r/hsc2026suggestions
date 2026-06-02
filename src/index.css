@@ -473,6 +473,12 @@ a { color: inherit; text-decoration: none; }
 .reorder-btn:disabled { opacity: .35; cursor: not-allowed; }
 .rank-pos { font-weight: 800; font-size: 0.82rem; color: var(--text-faint); min-width: 22px; text-align: center; }
 .section-reorder { display: inline-flex; gap: 3px; flex: none; }
+.move-select {
+  font: inherit; font-size: 0.68rem; font-weight: 700; color: var(--text-muted);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 3px 4px; max-width: 96px; cursor: pointer;
+}
+.move-select:hover { border-color: var(--border-strong); color: var(--primary); }
 
 .group-chip {
   width: 34px; height: 30px; border-radius: 9px; border: 1px solid var(--border);

@@ -535,6 +535,7 @@ function SyllabusEditor({
           index={i}
           count={sections.length}
           onMove={(dir) => moveSection(i, dir)}
+          allSections={sections}
           onSave={onSave}
           onDelete={onDelete}
           reload={reload}
@@ -627,6 +628,7 @@ function SectionEditor({
   index,
   count,
   onMove,
+  allSections,
   onSave,
   onDelete,
   reload,
@@ -635,6 +637,7 @@ function SectionEditor({
   index: number
   count: number
   onMove: (dir: -1 | 1) => void
+  allSections: Section[]
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
@@ -645,6 +648,29 @@ function SectionEditor({
     setMin(Number(section.min_cq_required))
     setAvail(Number(section.total_cq_available))
   }, [section.min_cq_required, section.total_cq_available])
+
+  const chapters = section.chapters
+  const otherSections = allSections.filter((s) => s.id !== section.id)
+
+  // Reorder chapters within this group.
+  async function moveChapter(ci: number, dir: -1 | 1) {
+    const target = ci + dir
+    if (target < 0 || target >= chapters.length) return
+    const arr = [...chapters]
+    ;[arr[ci], arr[target]] = [arr[target], arr[ci]]
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].sort_order !== i) await onSave('chapters', arr[i].id, { sort_order: i })
+    }
+    reload()
+  }
+
+  // Move a chapter to a different group (append to the end of the target).
+  async function moveChapterToSection(chapterId: string, targetSectionId: string) {
+    const target = allSections.find((s) => s.id === targetSectionId)
+    const newOrder = target ? target.chapters.length : 999
+    await onSave('chapters', chapterId, { section_id: targetSectionId, sort_order: newOrder })
+    reload()
+  }
 
   let hint = ''
   let bad = false
@@ -688,8 +714,19 @@ function SectionEditor({
       <div className={`section-rule-hint ${bad ? 'bad' : ''}`}>{hint}</div>
 
       <div style={{ padding: 6 }}>
-        {section.chapters.map((chap) => (
-          <ChapterEditor key={chap.id} chapter={chap} onSave={onSave} onDelete={onDelete} reload={reload} />
+        {chapters.map((chap, ci) => (
+          <ChapterEditor
+            key={chap.id}
+            chapter={chap}
+            index={ci}
+            count={chapters.length}
+            onMove={(dir) => moveChapter(ci, dir)}
+            otherSections={otherSections}
+            onMoveToSection={(targetId) => moveChapterToSection(chap.id, targetId)}
+            onSave={onSave}
+            onDelete={onDelete}
+            reload={reload}
+          />
         ))}
         <div
           className="add-row"
@@ -707,11 +744,21 @@ function SectionEditor({
 
 function ChapterEditor({
   chapter,
+  index,
+  count,
+  onMove,
+  otherSections,
+  onMoveToSection,
   onSave,
   onDelete,
   reload,
 }: {
   chapter: Chapter
+  index: number
+  count: number
+  onMove: (dir: -1 | 1) => void
+  otherSections: Section[]
+  onMoveToSection: (targetSectionId: string) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
@@ -721,6 +768,14 @@ function ChapterEditor({
   return (
     <div className="chapter" style={{ marginBottom: 8 }}>
       <div className="chapter-head">
+        <span className="section-reorder">
+          <button className="reorder-btn" disabled={index === 0} onClick={() => onMove(-1)} aria-label="অধ্যায় উপরে তোলো">
+            ↑
+          </button>
+          <button className="reorder-btn" disabled={index === count - 1} onClick={() => onMove(1)} aria-label="অধ্যায় নিচে নামাও">
+            ↓
+          </button>
+        </span>
         <span className={`chev ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)} aria-hidden="true">
           <Chevron />
         </span>
@@ -729,6 +784,23 @@ function ChapterEditor({
           Σ {totalWeight}
         </span>
         <span className="row" style={{ gap: 4, fontSize: '0.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {otherSections.length > 0 && (
+            <select
+              className="move-select"
+              value=""
+              title="অন্য গ্রুপে সরাও"
+              onChange={(e) => {
+                if (e.target.value) onMoveToSection(e.target.value)
+              }}
+            >
+              <option value="">⇄ গ্রুপ</option>
+              {otherSections.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title}
+                </option>
+              ))}
+            </select>
+          )}
           MCQ
           <Num value={chapter.est_mcq} onSave={(v) => onSave('chapters', chapter.id, { est_mcq: v })} style={{ width: 40 }} />
           <span className="sq" style={{ color: 'var(--warn)' }}>SQ</span>
