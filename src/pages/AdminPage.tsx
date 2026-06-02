@@ -546,8 +546,8 @@ function SyllabusEditor({
   if (!syllabus) return <div className="empty">সিলেবাস লোড হচ্ছে…</div>
 
   const sections = syllabus.sections
-  const persist = (id: string, patch: Record<string, unknown>) =>
-    updateRecord('chapters', id, patch).catch(() => {
+  const persist = (table: DbTable, id: string, patch: Record<string, unknown>) =>
+    updateRecord(table, id, patch).catch(() => {
       notify('সংরক্ষণ ব্যর্থ', 'err')
       reload()
     })
@@ -596,7 +596,7 @@ function SyllabusEditor({
         if (!isMoved && c.sort_order === i) return c
         const patch: Record<string, unknown> = { sort_order: i }
         if (isMoved) patch.section_id = targetSectionId
-        persist(c.id, patch)
+        persist('chapters', c.id, patch)
         return { ...c, sort_order: i, section_id: isMoved ? targetSectionId : c.section_id }
       }),
     }))
@@ -613,6 +613,30 @@ function SyllabusEditor({
     const refIdx = arrangeRef.findIndex((c) => c.id === refChapterId)
     if (refIdx < 0) return
     moveChapterTo(draggedId, refSec.id, after ? refIdx + 1 : refIdx)
+  }
+
+  // Reorder a topic within its chapter by dropping it before/after another.
+  function moveTopic(chapterId: string, draggedId: string, refTopicId: string, after: boolean) {
+    if (draggedId === refTopicId) return
+    const next = sections.map((s) => ({
+      ...s,
+      chapters: s.chapters.map((ch) => {
+        if (ch.id !== chapterId) return ch
+        const dragged = ch.topics.find((t) => t.id === draggedId)
+        if (!dragged) return ch
+        const arrange = ch.topics.filter((t) => t.id !== draggedId)
+        const refIdx = arrange.findIndex((t) => t.id === refTopicId)
+        if (refIdx < 0) return ch
+        arrange.splice(after ? refIdx + 1 : refIdx, 0, dragged)
+        const topics = arrange.map((t, i) => {
+          if (t.sort_order === i) return t
+          persist('topics', t.id, { sort_order: i })
+          return { ...t, sort_order: i }
+        })
+        return { ...ch, topics }
+      }),
+    }))
+    setSyllabus((s) => (s ? { ...s, sections: next } : s))
   }
 
   return (
@@ -640,6 +664,7 @@ function SyllabusEditor({
           setDraggingId={setDraggingId}
           onMoveChapter={moveChapterTo}
           onDropChapter={dropOnChapter}
+          onMoveTopic={moveTopic}
           onSave={onSave}
           onDelete={onDelete}
           reload={reload}
@@ -736,6 +761,7 @@ function SectionEditor({
   setDraggingId,
   onMoveChapter,
   onDropChapter,
+  onMoveTopic,
   onSave,
   onDelete,
   reload,
@@ -748,6 +774,7 @@ function SectionEditor({
   setDraggingId: (id: string | null) => void
   onMoveChapter: (chapterId: string, targetSectionId: string, targetIndex: number) => void
   onDropChapter: (draggedId: string, refChapterId: string, after: boolean) => void
+  onMoveTopic: (chapterId: string, draggedId: string, refTopicId: string, after: boolean) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
@@ -832,6 +859,7 @@ function SectionEditor({
             draggingId={draggingId}
             setDraggingId={setDraggingId}
             onDropChapter={onDropChapter}
+            onMoveTopic={onMoveTopic}
             onSave={onSave}
             onDelete={onDelete}
             reload={reload}
@@ -856,6 +884,7 @@ function ChapterEditor({
   draggingId,
   setDraggingId,
   onDropChapter,
+  onMoveTopic,
   onSave,
   onDelete,
   reload,
@@ -864,12 +893,14 @@ function ChapterEditor({
   draggingId: string | null
   setDraggingId: (id: string | null) => void
   onDropChapter: (draggedId: string, refChapterId: string, after: boolean) => void
+  onMoveTopic: (chapterId: string, draggedId: string, refTopicId: string, after: boolean) => void
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
   onDelete: (table: DbTable, id: string, after: () => void) => void
   reload: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [dropEdge, setDropEdge] = useState<'top' | 'bottom' | null>(null)
+  const [draggingTopicId, setDraggingTopicId] = useState<string | null>(null)
   const rowRef = useRef<HTMLDivElement>(null)
   const totalWeight = chapter.topics.reduce((sum, t) => sum + (Number(t.weight) || 0), 0)
   const isDragging = draggingId === chapter.id
@@ -939,14 +970,17 @@ function ChapterEditor({
       {open && (
         <ul className="topic-list">
           {chapter.topics.map((t) => (
-            <li key={t.id} className="topic">
-              <Text value={t.title} onSave={(v) => onSave('topics', t.id, { title: v })} style={{ flex: 1 }} />
-              <StarRating weight={t.weight} />
-              <WeightField topicId={t.id} weight={t.weight} onSave={onSave} />
-              <button className="del-x" onClick={() => onDelete('topics', t.id, reload)}>
-                ✕
-              </button>
-            </li>
+            <TopicRow
+              key={t.id}
+              topic={t}
+              chapterId={chapter.id}
+              draggingTopicId={draggingTopicId}
+              setDraggingTopicId={setDraggingTopicId}
+              onMoveTopic={onMoveTopic}
+              onSave={onSave}
+              onDelete={onDelete}
+              reload={reload}
+            />
           ))}
           <li>
             <span
@@ -963,6 +997,81 @@ function ChapterEditor({
         </ul>
       )}
     </div>
+  )
+}
+
+function TopicRow({
+  topic,
+  chapterId,
+  draggingTopicId,
+  setDraggingTopicId,
+  onMoveTopic,
+  onSave,
+  onDelete,
+  reload,
+}: {
+  topic: { id: string; title: string; weight: number }
+  chapterId: string
+  draggingTopicId: string | null
+  setDraggingTopicId: (id: string | null) => void
+  onMoveTopic: (chapterId: string, draggedId: string, refTopicId: string, after: boolean) => void
+  onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
+  onDelete: (table: DbTable, id: string, after: () => void) => void
+  reload: () => void
+}) {
+  const [dropEdge, setDropEdge] = useState<'top' | 'bottom' | null>(null)
+  const ref = useRef<HTMLLIElement>(null)
+  const isDragging = draggingTopicId === topic.id
+  const canDrop = draggingTopicId != null && draggingTopicId !== topic.id
+
+  return (
+    <li
+      ref={ref}
+      className={`topic ${isDragging ? 'topic-dragging' : ''} ${dropEdge ? 'drop-' + dropEdge : ''}`}
+      onDragOver={(e) => {
+        if (!canDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        const r = e.currentTarget.getBoundingClientRect()
+        setDropEdge(e.clientY < r.top + r.height / 2 ? 'top' : 'bottom')
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropEdge(null)
+      }}
+      onDrop={(e) => {
+        if (!canDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        const id = e.dataTransfer.getData('text/plain') || draggingTopicId
+        const after = dropEdge === 'bottom'
+        setDropEdge(null)
+        if (id) onMoveTopic(chapterId, id, topic.id, after)
+      }}
+    >
+      <span
+        className="drag-handle"
+        draggable
+        title="টেনে সাজান"
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', topic.id)
+          e.dataTransfer.effectAllowed = 'move'
+          if (ref.current) e.dataTransfer.setDragImage(ref.current, 16, 12)
+          setDraggingTopicId(topic.id)
+        }}
+        onDragEnd={() => {
+          setDraggingTopicId(null)
+          setDropEdge(null)
+        }}
+      >
+        ⠿
+      </span>
+      <Text value={topic.title} onSave={(v) => onSave('topics', topic.id, { title: v })} style={{ flex: 1 }} />
+      <StarRating weight={topic.weight} />
+      <WeightField topicId={topic.id} weight={topic.weight} onSave={onSave} />
+      <button className="del-x" onClick={() => onDelete('topics', topic.id, reload)}>
+        ✕
+      </button>
+    </li>
   )
 }
 
