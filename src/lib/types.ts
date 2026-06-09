@@ -34,6 +34,8 @@ export interface Section {
   min_cq_required: number
   /** Total CQ available to attempt from this section. */
   total_cq_available: number
+  /** Per-group marks per CQ — used only when the subject's alt_marks_scheme is on. */
+  cq_value_per_q: number
   sort_order: number
   chapters: Chapter[]
 }
@@ -55,6 +57,11 @@ export interface Subject {
   /** Marks awarded per answered question of each type. */
   cq_value_per_q: number
   sq_value_per_q: number
+  /** When true, CQ marks are set per group (section.cq_value_per_q) and labelled
+   *  with `cq_label` — for written subjects that don't follow the CQ/MCQ pattern. */
+  alt_marks_scheme: boolean
+  /** Custom name for the "CQ" question type (null → default "সৃজনশীল"). */
+  cq_label: string | null
 }
 
 export interface SubjectWithSyllabus extends Subject {

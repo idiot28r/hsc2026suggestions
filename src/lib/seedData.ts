@@ -34,6 +34,8 @@ interface RawSection {
   title: string
   minCq?: number
   availCq?: number
+  /** Per-group CQ marks (alternate scheme only). */
+  cqVal?: number
   chapters: RawChapter[]
 }
 
@@ -43,7 +45,7 @@ interface RawSubject {
   short: string
   icon: string
   groups: Partial<Record<GroupKey, number>>
-  marks: { cq: number; mcq: number; sq?: number; cqVal?: number; sqVal?: number }
+  marks: { cq: number; mcq: number; sq?: number; cqVal?: number; sqVal?: number; alt?: boolean; cqLabel?: string }
   sections: RawSection[]
 }
 
@@ -645,6 +647,8 @@ function buildSeed(): SubjectWithSyllabus[] {
       max_sq: rs.marks.sq ?? 0,
       cq_value_per_q: rs.marks.cqVal ?? 10,
       sq_value_per_q: rs.marks.sqVal ?? 2,
+      alt_marks_scheme: rs.marks.alt ?? false,
+      cq_label: rs.marks.cqLabel ?? null,
       sections: rs.sections.map((sec, si) => {
         const sectionId = `${rs.id}-s${si + 1}`
         return {
@@ -653,6 +657,7 @@ function buildSeed(): SubjectWithSyllabus[] {
           title: sec.title,
           min_cq_required: sec.minCq ?? 0,
           total_cq_available: sec.availCq ?? 0,
+          cq_value_per_q: sec.cqVal ?? 0,
           sort_order: si,
           chapters: sec.chapters.map((chap, ci) => {
             const chapterId = `${sectionId}-c${ci + 1}`

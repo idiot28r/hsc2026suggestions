@@ -2,8 +2,8 @@
 -- Run after schema.sql. Weights & mark distributions are PLACEHOLDERS; review them.
 begin;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('phy1','পদার্থবিজ্ঞান ১ম পত্র','Physics 1st','⚛️',true,1,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('phy1-s1','phy1','সৃজনশীল প্রশ্ন',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('phy1','পদার্থবিজ্ঞান ১ম পত্র','Physics 1st','⚛️',true,1,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('phy1-s1','phy1','সৃজনশীল প্রশ্ন',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('phy1-s1-c1','phy1-s1','১ম অধ্যায়: ভৌত জগৎ ও পরিমাপ',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy1-s1-c1-t1','phy1-s1-c1','মাত্রা ও মাত্রিক সমীকরণ',90,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy1-s1-c1-t2','phy1-s1-c1','পরিমাপের ত্রুটি ও তাৎপর্যপূর্ণ অঙ্ক',70,1) on conflict (id) do nothing;
@@ -45,8 +45,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('phy1-s1-c10-
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy1-s1-c10-t2','phy1-s1-c10','গতিতত্ত্ব ও মূল গড় বর্গবেগ',70,1) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy1-s1-c10-t3','phy1-s1-c10','গড় গতিশক্তি ও তাপমাত্রা',50,2) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('phy2','পদার্থবিজ্ঞান ২য় পত্র','Physics 2nd','🧲',true,2,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('phy2-s1','phy2','সৃজনশীল প্রশ্ন',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('phy2','পদার্থবিজ্ঞান ২য় পত্র','Physics 2nd','🧲',true,2,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('phy2-s1','phy2','সৃজনশীল প্রশ্ন',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('phy2-s1-c1','phy2-s1','১ম অধ্যায়: তাপগতিবিদ্যা',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy2-s1-c1-t1','phy2-s1-c1','তাপগতিবিদ্যার ১ম ও ২য় সূত্র',90,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy2-s1-c1-t2','phy2-s1-c1','কার্নো চক্র ও দক্ষতা',80,1) on conflict (id) do nothing;
@@ -86,8 +86,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('phy2-s1-c10-
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy2-s1-c10-t2','phy2-s1-c10','ট্রানজিস্টর ও বিবর্ধক',70,1) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('phy2-s1-c10-t3','phy2-s1-c10','লজিক গেইট',70,2) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('chem1','রসায়ন ১ম পত্র','Chemistry 1st','⚗️',true,3,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('chem1-s1','chem1','পূর্ণাঙ্গ সিলেবাস',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('chem1','রসায়ন ১ম পত্র','Chemistry 1st','⚗️',true,3,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('chem1-s1','chem1','পূর্ণাঙ্গ সিলেবাস',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('chem1-s1-c1','chem1-s1','১ম অধ্যায়: ল্যাবরেটরির নিরাপদ ব্যবহার',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem1-s1-c1-t1','chem1-s1-c1','রাসায়নিক দ্রব্যের সংরক্ষণ ও সংকেত',60,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem1-s1-c1-t2','chem1-s1-c1','দুর্ঘটনা ও প্রাথমিক চিকিৎসা',45,1) on conflict (id) do nothing;
@@ -110,8 +110,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('chem1-s1-c5-
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem1-s1-c5-t2','chem1-s1-c5','খাদ্য সংরক্ষণ ও সংরক্ষক',60,1) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem1-s1-c5-t3','chem1-s1-c5','ধাতু নিষ্কাশন ও সংকর',55,2) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('chem2','রসায়ন ২য় পত্র','Chemistry 2nd','🧪',true,4,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('chem2-s1','chem2','পূর্ণাঙ্গ সিলেবাস',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('chem2','রসায়ন ২য় পত্র','Chemistry 2nd','🧪',true,4,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('chem2-s1','chem2','পূর্ণাঙ্গ সিলেবাস',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('chem2-s1-c1','chem2-s1','১ম অধ্যায়: পরিবেশ রসায়ন',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem2-s1-c1-t1','chem2-s1-c1','গ্যাসীয় অবস্থা ও গ্যাস সূত্র',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem2-s1-c1-t2','chem2-s1-c1','বায়ুমণ্ডল ও বায়ুদূষণ',60,1) on conflict (id) do nothing;
@@ -132,8 +132,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ch
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem2-s1-c5-t1','chem2-s1-c5','অ্যামোনিয়া ও সালফিউরিক এসিড উৎপাদন',65,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('chem2-s1-c5-t2','chem2-s1-c5','গ্লাস, সিমেন্ট ও সিরামিক',55,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('hmath1','উচ্চতর গণিত ১ম পত্র','Higher Math 1st','📐',true,5,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('hmath1-s1','hmath1','ক বিভাগ — বীজগণিত ও জ্যামিতি',2,4,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('hmath1','উচ্চতর গণিত ১ম পত্র','Higher Math 1st','📐',true,5,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('hmath1-s1','hmath1','ক বিভাগ — বীজগণিত ও জ্যামিতি',2,4,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath1-s1-c1','hmath1-s1','১ম অধ্যায়: ম্যাট্রিক্স ও নির্ণায়ক',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s1-c1-t1','hmath1-s1-c1','নির্ণায়কের ধর্ম ও মান',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s1-c1-t2','hmath1-s1-c1','বিপরীত ম্যাট্রিক্স ও সমীকরণ সমাধান',85,1) on conflict (id) do nothing;
@@ -149,7 +149,7 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s1-c4
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath1-s1-c5','hmath1-s1','৫ম অধ্যায়: বিন্যাস ও সমাবেশ',3,0,4) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s1-c5-t1','hmath1-s1-c5','বিন্যাস (nPr)',75,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s1-c5-t2','hmath1-s1-c5','সমাবেশ (nCr)',80,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('hmath1-s2','hmath1','খ বিভাগ — ত্রিকোণমিতি ও ক্যালকুলাস',2,4,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('hmath1-s2','hmath1','খ বিভাগ — ত্রিকোণমিতি ও ক্যালকুলাস',2,4,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath1-s2-c1','hmath1-s2','৬ষ্ঠ অধ্যায়: ত্রিকোণমিতিক অনুপাত',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s2-c1-t1','hmath1-s2-c1','মৌলিক অভেদ ও মান নির্ণয়',70,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath1-s2-c2','hmath1-s2','৭ম অধ্যায়: সংযুক্ত কোণের ত্রিকোণমিতিক অনুপাত',2,0,1) on conflict (id) do nothing;
@@ -163,8 +163,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hm
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s2-c5-t1','hmath1-s2-c5','মৌলিক ও প্রতিস্থাপন যোগজ',90,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath1-s2-c5-t2','hmath1-s2-c5','নির্দিষ্ট যোগজ ও ক্ষেত্রফল',80,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('hmath2','উচ্চতর গণিত ২য় পত্র','Higher Math 2nd','➗',true,6,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('hmath2-s1','hmath2','ক বিভাগ — বীজগণিত ও জ্যামিতি',2,4,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('hmath2','উচ্চতর গণিত ২য় পত্র','Higher Math 2nd','➗',true,6,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('hmath2-s1','hmath2','ক বিভাগ — বীজগণিত ও জ্যামিতি',2,4,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath2-s1-c1','hmath2-s1','১ম অধ্যায়: জটিল সংখ্যা',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s1-c1-t1','hmath2-s1-c1','মডুলাস, আর্গুমেন্ট ও পোলার রূপ',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s1-c1-t2','hmath2-s1-c1','ঘনমূল ও De Moivre উপপাদ্য',75,1) on conflict (id) do nothing;
@@ -177,7 +177,7 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s1-c3
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath2-s1-c4','hmath2-s1','৪র্থ অধ্যায়: কনিক',4,0,3) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s1-c4-t1','hmath2-s1-c4','পরাবৃত্ত (Parabola)',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s1-c4-t2','hmath2-s1-c4','উপবৃত্ত ও অধিবৃত্ত',80,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('hmath2-s2','hmath2','খ বিভাগ — ত্রিকোণমিতি, বলবিদ্যা ও পরিসংখ্যান',2,4,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('hmath2-s2','hmath2','খ বিভাগ — ত্রিকোণমিতি, বলবিদ্যা ও পরিসংখ্যান',2,4,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hmath2-s2-c1','hmath2-s2','৫ম অধ্যায়: বিপরীত ত্রিকোণমিতিক ফাংশন ও সমীকরণ',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s2-c1-t1','hmath2-s2-c1','বিপরীত অনুপাতের মান',70,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s2-c1-t2','hmath2-s2-c1','ত্রিকোণমিতিক সমীকরণের সাধারণ সমাধান',80,1) on conflict (id) do nothing;
@@ -191,8 +191,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('hm
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s2-c4-t1','hmath2-s2-c4','পরিমিত ব্যবধান ও ভেদাঙ্ক',75,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('hmath2-s2-c4-t2','hmath2-s2-c4','সম্ভাবনার যোগ ও গুণ বিধি',85,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('bio1','জীববিজ্ঞান ১ম পত্র (উদ্ভিদবিজ্ঞান)','Biology 1st','🌿',true,7,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bio1-s1','bio1','পূর্ণাঙ্গ সিলেবাস',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('bio1','জীববিজ্ঞান ১ম পত্র (উদ্ভিদবিজ্ঞান)','Biology 1st','🌿',true,7,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bio1-s1','bio1','পূর্ণাঙ্গ সিলেবাস',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bio1-s1-c1','bio1-s1','১ম অধ্যায়: কোষ ও এর গঠন',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio1-s1-c1-t1','bio1-s1-c1','প্লাজমা মেমব্রেন ও মাইটোকন্ড্রিয়া',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio1-s1-c1-t2','bio1-s1-c1','প্লাস্টিড ও নিউক্লিয়াস',70,1) on conflict (id) do nothing;
@@ -230,8 +230,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('bio1-s1-c11-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bio1-s1-c12','bio1-s1','১২তম অধ্যায়: জীবের পরিবেশগত সম্পর্ক',1,0,11) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio1-s1-c12-t1','bio1-s1-c12','বাস্তুতন্ত্র ও খাদ্যশৃঙ্খল',55,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('bio2','জীববিজ্ঞান ২য় পত্র (প্রাণিবিজ্ঞান)','Biology 2nd','🐾',true,8,null,null,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bio2-s1','bio2','পূর্ণাঙ্গ সিলেবাস',5,8,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('bio2','জীববিজ্ঞান ২য় পত্র (প্রাণিবিজ্ঞান)','Biology 2nd','🐾',true,8,null,null,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bio2-s1','bio2','পূর্ণাঙ্গ সিলেবাস',5,8,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bio2-s1-c1','bio2-s1','১ম অধ্যায়: প্রাণীর বিভিন্নতা ও শ্রেণিবিন্যাস',2,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio2-s1-c1-t1','bio2-s1-c1','পর্ব ও শনাক্তকারী বৈশিষ্ট্য',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio2-s1-c1-t2','bio2-s1-c1','দ্বিপদ নামকরণ',55,1) on conflict (id) do nothing;
@@ -269,8 +269,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('bio2-s1-c11-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bio2-s1-c12','bio2-s1','১২তম অধ্যায়: প্রাণীর আচরণ',1,0,11) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bio2-s1-c12-t1','bio2-s1-c12','সহজাত ও শিক্ষণ আচরণ',50,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('ict','তথ্য ও যোগাযোগ প্রযুক্তি','ICT','💻',true,9,9,9,50,25,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('ict-s1','ict','পূর্ণাঙ্গ সিলেবাস',5,6,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('ict','তথ্য ও যোগাযোগ প্রযুক্তি','ICT','💻',true,9,9,9,50,25,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('ict-s1','ict','পূর্ণাঙ্গ সিলেবাস',5,6,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ict-s1-c1','ict-s1','১ম অধ্যায়: বিশ্ব ও বাংলাদেশ প্রেক্ষিত',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('ict-s1-c1-t1','ict-s1-c1','বায়োমেট্রিক্স, রোবোটিক্স ও AI',75,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('ict-s1-c1-t2','ict-s1-c1','ভার্চুয়াল রিয়েলিটি ও বায়োইনফরমেট্রিক্স',65,1) on conflict (id) do nothing;
@@ -294,8 +294,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ic
 insert into topics (id,chapter_id,title,weight,sort_order) values ('ict-s1-c6-t1','ict-s1-c6','DBMS, রিলেশন ও কী',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('ict-s1-c6-t2','ict-s1-c6','SQL ও কুয়েরি',80,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('bangla1','বাংলা ১ম পত্র','Bangla 1st','📖',true,10,10,1,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bangla1-s1','bangla1','গদ্য',3,4,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('bangla1','বাংলা ১ম পত্র','Bangla 1st','📖',true,10,10,1,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bangla1-s1','bangla1','গদ্য',3,4,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s1-c1','bangla1-s1','অপরিচিতা — রবীন্দ্রনাথ ঠাকুর',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s1-c1-t1','bangla1-s1-c1','অনুপম ও কল্যাণীর চরিত্র',90,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s1-c1-t2','bangla1-s1-c1','যৌতুক প্রথা ও নারী জাগরণ',75,1) on conflict (id) do nothing;
@@ -310,7 +310,7 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ba
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s1-c5-t1','bangla1-s1-c5','আহ্লাদি ও নারীর সংগ্রাম',70,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s1-c6','bangla1-s1','বায়ান্নর দিনগুলো — শেখ মুজিবুর রহমান',2,0,5) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s1-c6-t1','bangla1-s1-c6','ভাষা আন্দোলন ও কারাজীবন',75,0) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bangla1-s2','bangla1','পদ্য',3,4,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bangla1-s2','bangla1','পদ্য',3,4,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s2-c1','bangla1-s2','বিদ্রোহী — কাজী নজরুল ইসলাম',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s2-c1-t1','bangla1-s2-c1','বিদ্রোহী চেতনা ও পুরাণ-উপমা',90,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s2-c2','bangla1-s2','সোনার তরী — রবীন্দ্রনাথ ঠাকুর',2,0,1) on conflict (id) do nothing;
@@ -321,7 +321,7 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ba
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s2-c4-t1','bangla1-s2-c4','তারুণ্যের শক্তি ও দ্বন্দ্ব',75,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s2-c5','bangla1-s2','আমি কিংবদন্তির কথা বলছি — আবু জাফর ওবায়দুল্লাহ',2,0,4) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s2-c5-t1','bangla1-s2-c5','মাটি ও মানুষের ইতিহাস',65,0) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bangla1-s3','bangla1','উপন্যাস ও নাটক',1,3,2) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bangla1-s3','bangla1','উপন্যাস ও নাটক',1,3,0,2) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla1-s3-c1','bangla1-s3','লালসালু (উপন্যাস) — সৈয়দ ওয়ালীউল্লাহ',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s3-c1-t1','bangla1-s3-c1','মজিদ চরিত্র ও ধর্মব্যবসা',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s3-c1-t2','bangla1-s3-c1','কুসংস্কার ও মহব্বতনগর',70,1) on conflict (id) do nothing;
@@ -329,8 +329,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('ba
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s3-c2-t1','bangla1-s3-c2','সিরাজ চরিত্র ও দেশপ্রেম',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla1-s3-c2-t2','bangla1-s3-c2','ষড়যন্ত্র ও পলাশীর যুদ্ধ',70,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('bangla2','বাংলা ২য় পত্র','Bangla 2nd','✍️',true,11,11,2,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bangla2-s1','bangla2','ব্যাকরণ',3,5,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('bangla2','বাংলা ২য় পত্র','Bangla 2nd','✍️',true,11,11,2,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bangla2-s1','bangla2','ব্যাকরণ',3,5,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla2-s1-c1','bangla2-s1','সন্ধি',5,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s1-c1-t1','bangla2-s1-c1','স্বরসন্ধি ও ব্যঞ্জনসন্ধি',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s1-c1-t2','bangla2-s1-c1','নিপাতনে সিদ্ধ সন্ধি',65,1) on conflict (id) do nothing;
@@ -350,7 +350,7 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s1-c
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla2-s1-c7','bangla2-s1','বাগধারা ও বাক্য সংকোচন',3,0,6) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s1-c7-t1','bangla2-s1-c7','বাগধারার অর্থ',75,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s1-c7-t2','bangla2-s1-c7','এক কথায় প্রকাশ',70,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bangla2-s2','bangla2','নির্মিতি',4,6,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bangla2-s2','bangla2','নির্মিতি',4,6,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla2-s2-c1','bangla2-s2','সারাংশ ও সারমর্ম',0,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s2-c1-t1','bangla2-s2-c1','সারাংশ লিখন',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s2-c1-t2','bangla2-s2-c1','সারমর্ম লিখন',75,1) on conflict (id) do nothing;
@@ -367,8 +367,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s2-c
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bangla2-s2-c6','bangla2-s2','প্রবন্ধ রচনা',0,0,5) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bangla2-s2-c6-t1','bangla2-s2-c6','বিষয়ভিত্তিক প্রবন্ধ',85,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('english1','English 1st Paper','English 1st','🔤',true,12,12,3,0,0,100,10,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('english1-s1','english1','Part A — Reading (60)',0,0,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('english1','English 1st Paper','English 1st','🔤',true,12,12,3,0,0,100,10,1,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('english1-s1','english1','Part A — Reading (60)',0,0,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english1-s1-c1','english1-s1','Seen Comprehension — MCQ & Q&A',0,15,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s1-c1-t1','english1-s1-c1','MCQ from passage',90,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s1-c1-t2','english1-s1-c1','Open-ended questions (answer in own words)',85,1) on conflict (id) do nothing;
@@ -382,7 +382,7 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s1-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english1-s1-c5','english1-s1','Rearranging & Matching',0,15,4) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s1-c5-t1','english1-s1-c5','Rearranging sentences into a story',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s1-c5-t2','english1-s1-c5','Matching to make meaning',70,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('english1-s2','english1','Part B — Writing (40)',0,0,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('english1-s2','english1','Part B — Writing (40)',0,0,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english1-s2-c1','english1-s2','Paragraph Writing',0,10,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s2-c1-t1','english1-s2-c1','Paragraph (cause-effect / listing)',85,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english1-s2-c2','english1-s2','Completing a Story',0,10,1) on conflict (id) do nothing;
@@ -392,8 +392,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s2-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english1-s2-c4','english1-s2','Describing Graph / Chart / Process',0,10,3) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english1-s2-c4-t1','english1-s2-c4','Graph & chart description',75,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('english2','English 2nd Paper','English 2nd','📝',true,13,13,4,0,0,100,10,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('english2-s1','english2','Part A — Grammar (60)',0,0,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('english2','English 2nd Paper','English 2nd','📝',true,13,13,4,0,0,100,10,1,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('english2-s1','english2','Part A — Grammar (60)',0,0,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english2-s1-c1','english2-s1','Articles & Prepositions',0,10,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s1-c1-t1','english2-s1-c1','Gap filling with articles',85,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s1-c1-t2','english2-s1-c1','Prepositions in context',85,1) on conflict (id) do nothing;
@@ -411,7 +411,7 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s1-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english2-s1-c7','english2-s1','Synonym / Antonym & Punctuation',0,10,6) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s1-c7-t1','english2-s1-c7','Word meaning in context',65,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s1-c7-t2','english2-s1-c7','Punctuation & capitalization',70,1) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('english2-s2','english2','Part B — Composition (40)',0,0,1) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('english2-s2','english2','Part B — Composition (40)',0,0,0,1) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english2-s2-c1','english2-s2','CV with Cover Letter / Application',0,10,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s2-c1-t1','english2-s2-c1','Job application & CV',80,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english2-s2-c2','english2-s2','Paragraph Writing',0,10,1) on conflict (id) do nothing;
@@ -421,8 +421,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s2-
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('english2-s2-c4','english2-s2','Composition / Essay',0,10,3) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('english2-s2-c4-t1','english2-s2-c4','Essay on common topics',80,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('acc1','হিসাববিজ্ঞান ১ম পত্র','Accounting 1st','🧾',true,null,1,null,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('acc1-s1','acc1','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('acc1','হিসাববিজ্ঞান ১ম পত্র','Accounting 1st','🧾',true,null,1,null,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('acc1-s1','acc1','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('acc1-s1-c1','acc1-s1','১ম অধ্যায়: হিসাববিজ্ঞান পরিচিতি',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('acc1-s1-c1-t1','acc1-s1-c1','হিসাববিজ্ঞানের উদ্দেশ্য ও পরিধি',65,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('acc1-s1-c2','acc1-s1','২য় অধ্যায়: দুতরফা দাখিলা পদ্ধতি',3,0,1) on conflict (id) do nothing;
@@ -444,8 +444,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('acc1-s1-c8-t
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('acc1-s1-c9','acc1-s1','৯ম অধ্যায়: ব্যাংক সমন্বয় বিবরণী',3,0,8) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('acc1-s1-c9-t1','acc1-s1-c9','ব্যাংক সমন্বয় বিবরণী প্রস্তুত',85,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('acc2','হিসাববিজ্ঞান ২য় পত্র','Accounting 2nd','📒',true,null,2,null,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('acc2-s1','acc2','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('acc2','হিসাববিজ্ঞান ২য় পত্র','Accounting 2nd','📒',true,null,2,null,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('acc2-s1','acc2','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('acc2-s1-c1','acc2-s1','১ম অধ্যায়: আর্থিক বিবরণী',5,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('acc2-s1-c1-t1','acc2-s1-c1','আয় বিবরণী ও উদ্বৃত্তপত্র',95,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('acc2-s1-c1-t2','acc2-s1-c1','সমন্বয় দাখিলা',85,1) on conflict (id) do nothing;
@@ -465,8 +465,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('acc2-s1-c7-t
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('acc2-s1-c8','acc2-s1','৮ম অধ্যায়: আর্থিক বিবরণী বিশ্লেষণ (অনুপাত)',3,0,7) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('acc2-s1-c8-t1','acc2-s1-c8','তারল্য ও মুনাফা অনুপাত',80,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('fin1','ফিন্যান্স, ব্যাংকিং ও বিমা ১ম পত্র','Finance 1st','🏦',true,null,3,null,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('fin1-s1','fin1','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('fin1','ফিন্যান্স, ব্যাংকিং ও বিমা ১ম পত্র','Finance 1st','🏦',true,null,3,null,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('fin1-s1','fin1','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('fin1-s1-c1','fin1-s1','১ম অধ্যায়: অর্থায়নের সূচনা',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('fin1-s1-c1-t1','fin1-s1-c1','অর্থায়নের লক্ষ্য, নীতি ও পরিধি',70,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('fin1-s1-c2','fin1-s1','২য় অধ্যায়: আর্থিক বিবরণী ও অনুপাত বিশ্লেষণ',4,0,1) on conflict (id) do nothing;
@@ -486,8 +486,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('fin1-s1-c7-t
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('fin1-s1-c8','fin1-s1','৮ম অধ্যায়: দীর্ঘমেয়াদি অর্থায়ন',3,0,7) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('fin1-s1-c8-t1','fin1-s1-c8','শেয়ার, ঋণপত্র ও লিজিং',65,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('bom','ব্যবসায় সংগঠন ও ব্যবস্থাপনা','Business Org. & Mgmt','🏢',true,null,4,null,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('bom-s1','bom','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('bom','ব্যবসায় সংগঠন ও ব্যবস্থাপনা','Business Org. & Mgmt','🏢',true,null,4,null,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('bom-s1','bom','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bom-s1-c1','bom-s1','১ম অধ্যায়: ব্যবসায় পরিচিতি',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bom-s1-c1-t1','bom-s1-c1','ব্যবসায়ের ধারণা ও পরিবেশ',65,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bom-s1-c2','bom-s1','২য় অধ্যায়: ব্যবসায়ের আইনগত দিক',3,0,1) on conflict (id) do nothing;
@@ -507,8 +507,8 @@ insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('bo
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bom-s1-c8-t1','bom-s1-c8','সংগঠন কাঠামো ও কর্তৃত্ব অর্পণ',80,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('bom-s1-c8-t2','bom-s1-c8','নেতৃত্ব ও প্রেষণা তত্ত্ব (Maslow)',85,1) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('econ','অর্থনীতি','Economics','📈',true,null,5,5,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('econ-s1','econ','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('econ','অর্থনীতি','Economics','📈',true,null,5,5,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('econ-s1','econ','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('econ-s1-c1','econ-s1','১ম অধ্যায়: অর্থনীতির মৌলিক ধারণা',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('econ-s1-c1-t1','econ-s1-c1','মৌলিক সমস্যা ও উৎপাদন সম্ভাবনা রেখা',75,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('econ-s1-c2','econ-s1','২য় অধ্যায়: চাহিদা, যোগান ও ভারসাম্য',5,0,1) on conflict (id) do nothing;
@@ -527,8 +527,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('econ-s1-c7-t
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('econ-s1-c8','econ-s1','৮ম অধ্যায়: বাংলাদেশের অর্থনীতি',3,0,7) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('econ-s1-c8-t1','econ-s1-c8','কৃষি, শিল্প ও খাত বিশ্লেষণ',60,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('civics','পৌরনীতি ও সুশাসন','Civics & Good Governance','⚖️',true,null,null,6,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('civics-s1','civics','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('civics','পৌরনীতি ও সুশাসন','Civics & Good Governance','⚖️',true,null,null,6,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('civics-s1','civics','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('civics-s1-c1','civics-s1','১ম অধ্যায়: পৌরনীতি ও সুশাসন পরিচিতি',4,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('civics-s1-c1-t1','civics-s1-c1','সুশাসনের উপাদান ও গুরুত্ব',85,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('civics-s1-c2','civics-s1','২য় অধ্যায়: নাগরিক ও নাগরিকতা',4,0,1) on conflict (id) do nothing;
@@ -547,8 +547,8 @@ insert into topics (id,chapter_id,title,weight,sort_order) values ('civics-s1-c7
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('civics-s1-c8','civics-s1','৮ম অধ্যায়: সুশাসন ও ই-গভর্ন্যান্স',2,0,7) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('civics-s1-c8-t1','civics-s1-c8','ই-গভর্ন্যান্স ও জবাবদিহিতা',65,0) on conflict (id) do nothing;
 
-insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values ('logic','যুক্তিবিদ্যা','Logic','🧠',true,null,null,7,70,30,0,10,2) on conflict (id) do nothing;
-insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values ('logic-s1','logic','পূর্ণাঙ্গ সিলেবাস',7,11,0) on conflict (id) do nothing;
+insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values ('logic','যুক্তিবিদ্যা','Logic','🧠',true,null,null,7,70,30,0,10,2,false,null) on conflict (id) do nothing;
+insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values ('logic-s1','logic','পূর্ণাঙ্গ সিলেবাস',7,11,0,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('logic-s1-c1','logic-s1','১ম অধ্যায়: যুক্তিবিদ্যার স্বরূপ',3,0,0) on conflict (id) do nothing;
 insert into topics (id,chapter_id,title,weight,sort_order) values ('logic-s1-c1-t1','logic-s1-c1','যুক্তিবিদ্যার সংজ্ঞা, পরিধি ও প্রকৃতি',70,0) on conflict (id) do nothing;
 insert into chapters (id,section_id,title,est_mcq,est_sq,sort_order) values ('logic-s1-c2','logic-s1','২য় অধ্যায়: যুক্তিবিদ্যা ও অন্যান্য বিষয়',2,0,1) on conflict (id) do nothing;

@@ -14,8 +14,9 @@ export default function ScoreBreakdown({
   score: ScoreResult
   subject: SubjectWithSyllabus
 }) {
+  const cqLabel = subject.cq_label?.trim() || 'CQ'
   const segs: Seg[] = [
-    { key: 'cq' as const, label: 'CQ', earned: score.finalCQ, max: subject.max_cq },
+    { key: 'cq' as const, label: cqLabel, earned: score.finalCQ, max: subject.max_cq },
     { key: 'mcq' as const, label: 'MCQ', earned: score.finalMCQ, max: subject.max_mcq },
     { key: 'sq' as const, label: 'SQ', earned: score.finalSQ, max: subject.max_sq },
   ].filter((s) => s.max > 0)

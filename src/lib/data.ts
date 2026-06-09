@@ -265,6 +265,8 @@ export async function createSubject(input: Partial<Subject> & { id: string; titl
     max_sq: input.max_sq ?? 0,
     cq_value_per_q: input.cq_value_per_q ?? 10,
     sq_value_per_q: input.sq_value_per_q ?? 2,
+    alt_marks_scheme: input.alt_marks_scheme ?? false,
+    cq_label: input.cq_label ?? null,
   }
   if (supabase) {
     const { error } = await supabase.rpc('admin_insert', { p_token: getAdminToken(), p_table: 'subjects', p_data: row })
@@ -284,6 +286,7 @@ export async function createSection(subjectId: string): Promise<string> {
     title: 'নতুন গ্রুপ',
     min_cq_required: 0,
     total_cq_available: 0,
+    cq_value_per_q: 0,
     sort_order: 999,
   }
   if (supabase) {

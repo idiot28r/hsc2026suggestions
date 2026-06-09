@@ -133,6 +133,8 @@ export default function TrackerPage() {
               <SectionBlock
                 key={sec.id}
                 section={sec}
+                alt={!!subject.alt_marks_scheme}
+                cqLabel={subject.cq_label?.trim() || 'CQ'}
                 completed={completed}
                 onToggleTopic={toggleTopic}
                 onToggleChapter={toggleChapter}
@@ -147,11 +149,15 @@ export default function TrackerPage() {
 
 function SectionBlock({
   section,
+  alt,
+  cqLabel,
   completed,
   onToggleTopic,
   onToggleChapter,
 }: {
   section: Section
+  alt: boolean
+  cqLabel: string
   completed: Set<string>
   onToggleTopic: (id: string) => void
   onToggleChapter: (chap: Chapter, on: boolean) => void
@@ -162,20 +168,34 @@ function SectionBlock({
         <h3>
           <MathText text={section.title} />
         </h3>
-        {section.total_cq_available > 0 && (
-          <span
-            className={`cq-badge ${section.min_cq_required > 0 ? '' : 'optional'}`}
-            title={
-              section.min_cq_required > 0
-                ? `এই অংশের ${section.total_cq_available}টি সৃজনশীল প্রশ্ন থেকে অন্তত ${section.min_cq_required}টির উত্তর আবশ্যক`
-                : `এই অংশের অধ্যায়গুলো থেকে ${section.total_cq_available}টি সৃজনশীল প্রশ্ন আসবে (উত্তর দেওয়া বাধ্যতামূলক নয়)`
-            }
-          >
-            {section.min_cq_required > 0
-              ? `CQ: ${section.total_cq_available}টির মধ্যে ${section.min_cq_required}টি আবশ্যক`
-              : `CQ: ${section.total_cq_available}টি প্রশ্ন আসবে`}
-          </span>
-        )}
+        {section.total_cq_available > 0 &&
+          (alt ? (
+            <span
+              className="cq-badge"
+              title={
+                section.min_cq_required > 0
+                  ? `${section.total_cq_available}টি ${cqLabel} প্রশ্নের মধ্যে যেকোনো ${section.min_cq_required}টির উত্তর · প্রতিটি ${section.cq_value_per_q} নম্বর`
+                  : `এই অংশের ${section.total_cq_available}টি ${cqLabel} প্রশ্ন · প্রতিটি ${section.cq_value_per_q} নম্বর`
+              }
+            >
+              {section.min_cq_required > 0
+                ? `${cqLabel}: যেকোনো ${section.min_cq_required}/${section.total_cq_available} · ${section.min_cq_required * section.cq_value_per_q} নম্বর`
+                : `${cqLabel}: ${section.total_cq_available}টি প্রশ্ন · ${section.total_cq_available * section.cq_value_per_q} নম্বর`}
+            </span>
+          ) : (
+            <span
+              className={`cq-badge ${section.min_cq_required > 0 ? '' : 'optional'}`}
+              title={
+                section.min_cq_required > 0
+                  ? `এই অংশের ${section.total_cq_available}টি সৃজনশীল প্রশ্ন থেকে অন্তত ${section.min_cq_required}টির উত্তর আবশ্যক`
+                  : `এই অংশের অধ্যায়গুলো থেকে ${section.total_cq_available}টি সৃজনশীল প্রশ্ন আসবে (উত্তর দেওয়া বাধ্যতামূলক নয়)`
+              }
+            >
+              {section.min_cq_required > 0
+                ? `CQ: ${section.total_cq_available}টির মধ্যে ${section.min_cq_required}টি আবশ্যক`
+                : `CQ: ${section.total_cq_available}টি প্রশ্ন আসবে`}
+            </span>
+          ))}
       </div>
       {section.chapters.map((chap) => (
         <ChapterRow

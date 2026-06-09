@@ -659,6 +659,7 @@ function SyllabusEditor({
           section={sec}
           index={i}
           count={sections.length}
+          alt={!!syllabus.alt_marks_scheme}
           onMove={(dir) => moveSection(i, dir)}
           draggingId={draggingId}
           setDraggingId={setDraggingId}
@@ -697,6 +698,7 @@ function CqRuleBar({
   subjectId: string
   onSave: (table: DbTable, id: string, patch: Record<string, unknown>) => void
 }) {
+  const alt = !!syllabus.alt_marks_scheme
   // Local mirror so the derived "answer M" updates live as the expert types.
   const [maxCq, setMaxCq] = useState(Number(syllabus.max_cq))
   const [cqVal, setCqVal] = useState(Number(syllabus.cq_value_per_q))
@@ -705,16 +707,59 @@ function CqRuleBar({
     setCqVal(Number(syllabus.cq_value_per_q))
   }, [syllabus.max_cq, syllabus.cq_value_per_q])
 
+  const cqName = syllabus.cq_label?.trim() || 'সৃজনশীল'
   const answerM = cqVal > 0 ? Math.round(maxCq / cqVal) : 0
   const sumMin = syllabus.sections.reduce((a, s) => a + (Number(s.min_cq_required) || 0), 0)
   const sumAvail = syllabus.sections.reduce((a, s) => a + (Number(s.total_cq_available) || 0), 0)
+  const groupMarks = syllabus.sections.reduce((a, s) => {
+    const av = Number(s.total_cq_available) || 0
+    const mn = Number(s.min_cq_required) || 0
+    return a + (mn > 0 ? mn : av) * (Number(s.cq_value_per_q) || 0)
+  }, 0)
   const optional = Math.max(0, answerM - sumMin)
-  const noCq = maxCq <= 0
+  const noCq = maxCq <= 0 && !alt
 
   return (
     <div className="card cq-rule">
-      <div className="cq-rule-head">📋 সৃজনশীল প্রশ্নের নিয়ম</div>
-      {noCq ? (
+      <div className="cq-rule-head">
+        <span>📋 {cqName} প্রশ্নের নিয়ম</span>
+        <label
+          className="alt-toggle"
+          title="যেসব বিষয় CQ/MCQ ছকে চলে না (যেমন বাংলা ২য়, ইংরেজি) — প্রতিটি গ্রুপে আলাদা নম্বর সেট করতে চালু করো"
+        >
+          <input
+            type="checkbox"
+            checked={alt}
+            onChange={(e) => onSave('subjects', subjectId, { alt_marks_scheme: e.target.checked })}
+          />
+          বিকল্প নম্বর বণ্টন স্কিম
+        </label>
+      </div>
+
+      {alt ? (
+        <>
+          <div className="cq-rule-fields">
+            <label>
+              প্রশ্নের ধরনের নাম
+              <Text
+                value={syllabus.cq_label ?? ''}
+                placeholder="যেমন: রচনামূলক"
+                onSave={(v) => onSave('subjects', subjectId, { cq_label: v.trim() || null })}
+                style={{ width: 130 }}
+              />
+            </label>
+            <label>
+              মোট নম্বর
+              <Num value={syllabus.max_cq} onLive={setMaxCq} onSave={(v) => onSave('subjects', subjectId, { max_cq: v })} />
+            </label>
+            <div className="cq-rule-answer">প্রতিটি গ্রুপে আলাদা নম্বর সেট করো ↓</div>
+          </div>
+          <div className={`cq-rule-check ${Math.round(groupMarks) !== Math.round(maxCq) ? 'bad' : 'ok'}`}>
+            গ্রুপগুলোর মোট নম্বর: <b>{groupMarks}</b> / {maxCq}
+            {Math.round(groupMarks) !== Math.round(maxCq) ? ' ⚠️ মোট নম্বরের সাথে মেলাও' : ' ✓'}
+          </div>
+        </>
+      ) : noCq ? (
         <div className="cq-rule-line muted">এই বিষয়ে সৃজনশীল (CQ) নেই — নিচের গ্রুপগুলো শুধু MCQ/SQ ও অধ্যায়ের জন্য।</div>
       ) : (
         <>
@@ -756,6 +801,7 @@ function SectionEditor({
   section,
   index,
   count,
+  alt,
   onMove,
   draggingId,
   setDraggingId,
@@ -769,6 +815,7 @@ function SectionEditor({
   section: Section
   index: number
   count: number
+  alt: boolean
   onMove: (dir: -1 | 1) => void
   draggingId: string | null
   setDraggingId: (id: string | null) => void
@@ -781,21 +828,33 @@ function SectionEditor({
 }) {
   const [min, setMin] = useState(Number(section.min_cq_required))
   const [avail, setAvail] = useState(Number(section.total_cq_available))
+  const [groupVal, setGroupVal] = useState(Number(section.cq_value_per_q))
   const [dropActive, setDropActive] = useState(false)
   useEffect(() => {
     setMin(Number(section.min_cq_required))
     setAvail(Number(section.total_cq_available))
-  }, [section.min_cq_required, section.total_cq_available])
+    setGroupVal(Number(section.cq_value_per_q))
+  }, [section.min_cq_required, section.total_cq_available, section.cq_value_per_q])
 
   const chapters = section.chapters
   const draggedHere = draggingId != null && chapters.some((c) => c.id === draggingId)
 
   let hint = ''
   let bad = false
-  if (avail <= 0) hint = 'এই গ্রুপ থেকে কোনো সৃজনশীল প্রশ্ন আসবে না (শুধু অধ্যায় ও MCQ/SQ)।'
+  if (alt) {
+    const answerCount = min > 0 ? min : avail
+    hint =
+      min > 0
+        ? `এই গ্রুপ: ${avail} টির মধ্যে ${min} টির উত্তর × ${groupVal} নম্বর = ${answerCount * groupVal} নম্বর`
+        : `এই গ্রুপ: ${avail} টি প্রশ্ন × ${groupVal} নম্বর = ${avail * groupVal} নম্বর`
+    if (avail > 0 && min > avail) {
+      hint = `⚠️ উত্তর সংখ্যা (${min}) প্রশ্ন সংখ্যা (${avail})-এর চেয়ে বেশি — ঠিক করো।`
+      bad = true
+    }
+  } else if (avail <= 0) hint = 'এই গ্রুপ থেকে কোনো সৃজনশীল প্রশ্ন আসবে না (শুধু অধ্যায় ও MCQ/SQ)।'
   else if (min <= 0) hint = `এই গ্রুপ থেকে ${avail} টি প্রশ্ন আসবে · উত্তর দেওয়া বাধ্যতামূলক নয়।`
   else hint = `এই গ্রুপ থেকে ${avail} টি প্রশ্ন আসবে · কমপক্ষে ${min} টির উত্তর আবশ্যক।`
-  if (avail > 0 && min > avail) {
+  if (!alt && avail > 0 && min > avail) {
     hint = `⚠️ আবশ্যক উত্তর (${min}) প্রশ্নসংখ্যা (${avail})-এর চেয়ে বেশি — ঠিক করো।`
     bad = true
   }
@@ -835,14 +894,27 @@ function SectionEditor({
           <Text value={section.title} placeholder="গ্রুপ / বিভাগের নাম" onSave={(v) => onSave('sections', section.id, { title: v })} style={{ fontWeight: 800, color: 'var(--primary-700)' }} />
         </span>
         <span className="row" style={{ gap: 10, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-          <label className="seg-field" title="এই গ্রুপ থেকে কমপক্ষে কয়টি সৃজনশীলের উত্তর দিতে হবে। ০ দিলে এই গ্রুপ থেকে উত্তর দেওয়া বাধ্যতামূলক নয়।">
-            আবশ্যক উত্তর
+          <label
+            className="seg-field"
+            title={
+              alt
+                ? 'এই গ্রুপের কয়টি প্রশ্নের উত্তর দিতে হবে। ০ দিলে সব প্রশ্নের উত্তর দিতে হবে।'
+                : 'এই গ্রুপ থেকে কমপক্ষে কয়টি সৃজনশীলের উত্তর দিতে হবে। ০ দিলে এই গ্রুপ থেকে উত্তর দেওয়া বাধ্যতামূলক নয়।'
+            }
+          >
+            {alt ? 'উত্তর দিতে হবে' : 'আবশ্যক উত্তর'}
             <Num value={section.min_cq_required} onLive={setMin} onSave={(v) => onSave('sections', section.id, { min_cq_required: v })} />
           </label>
-          <label className="seg-field" title="এই গ্রুপের অধ্যায়গুলো থেকে কয়টি সৃজনশীল প্রশ্ন প্রশ্নপত্রে আসবে।">
-            প্রশ্ন আসবে
+          <label className="seg-field" title="এই গ্রুপের অধ্যায়গুলো থেকে কয়টি প্রশ্ন প্রশ্নপত্রে আসবে।">
+            প্রশ্ন সংখ্যা
             <Num value={section.total_cq_available} onLive={setAvail} onSave={(v) => onSave('sections', section.id, { total_cq_available: v })} />
           </label>
+          {alt && (
+            <label className="seg-field" title="এই গ্রুপের প্রতিটি প্রশ্নের নম্বর।">
+              প্রতি প্রশ্নের নম্বর
+              <Num value={section.cq_value_per_q} onLive={setGroupVal} onSave={(v) => onSave('sections', section.id, { cq_value_per_q: v })} />
+            </label>
+          )}
           <button className="del-x" onClick={() => onDelete('sections', section.id, reload)}>
             ✕
           </button>

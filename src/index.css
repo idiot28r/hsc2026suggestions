@@ -511,7 +511,9 @@ a { color: inherit; text-decoration: none; }
 
 /* Subject-level CQ rule panel + per-group authoring */
 .cq-rule { padding: 14px 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
-.cq-rule-head { font-weight: 800; font-size: 0.9rem; }
+.cq-rule-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 800; font-size: 0.9rem; }
+.alt-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+.alt-toggle input { width: 15px; height: 15px; cursor: pointer; }
 .cq-rule-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .cq-rule-fields label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.8rem; }
 .cq-rule-answer { font-weight: 700; font-size: 0.85rem; color: var(--primary-600); }

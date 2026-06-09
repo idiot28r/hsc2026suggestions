@@ -18,11 +18,11 @@ const lines = [
 
 for (const s of SEED_SUBJECTS) {
   lines.push(
-    `insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q) values (${q(s.id)},${q(s.title)},${q(s.short_code)},${q(s.icon_emoji)},${s.is_active},${n(s.rank_science)},${n(s.rank_business)},${n(s.rank_humanities)},${n(s.max_cq)},${n(s.max_mcq)},${n(s.max_sq)},${n(s.cq_value_per_q)},${n(s.sq_value_per_q)}) on conflict (id) do nothing;`,
+    `insert into subjects (id,title,short_code,icon_emoji,is_active,rank_science,rank_business,rank_humanities,max_cq,max_mcq,max_sq,cq_value_per_q,sq_value_per_q,alt_marks_scheme,cq_label) values (${q(s.id)},${q(s.title)},${q(s.short_code)},${q(s.icon_emoji)},${s.is_active},${n(s.rank_science)},${n(s.rank_business)},${n(s.rank_humanities)},${n(s.max_cq)},${n(s.max_mcq)},${n(s.max_sq)},${n(s.cq_value_per_q)},${n(s.sq_value_per_q)},${s.alt_marks_scheme},${q(s.cq_label)}) on conflict (id) do nothing;`,
   )
   for (const sec of s.sections) {
     lines.push(
-      `insert into sections (id,subject_id,title,min_cq_required,total_cq_available,sort_order) values (${q(sec.id)},${q(sec.subject_id)},${q(sec.title)},${n(sec.min_cq_required)},${n(sec.total_cq_available)},${n(sec.sort_order)}) on conflict (id) do nothing;`,
+      `insert into sections (id,subject_id,title,min_cq_required,total_cq_available,cq_value_per_q,sort_order) values (${q(sec.id)},${q(sec.subject_id)},${q(sec.title)},${n(sec.min_cq_required)},${n(sec.total_cq_available)},${n(sec.cq_value_per_q)},${n(sec.sort_order)}) on conflict (id) do nothing;`,
     )
     for (const chap of sec.chapters) {
       lines.push(

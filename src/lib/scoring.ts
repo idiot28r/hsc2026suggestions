@@ -22,6 +22,7 @@ export function calculateScore(
   const maxSq = num(subject.max_sq)
   const cqValue = num(subject.cq_value_per_q) || 10
   const sqValue = num(subject.sq_value_per_q) || 2
+  const alt = !!subject.alt_marks_scheme
 
   const totalCqToAnswer = cqValue > 0 ? maxCq / cqValue : 0
 
@@ -30,6 +31,8 @@ export function calculateScore(
   let mandatoryCq = 0
   let overflowCq = 0
   let minRequiredCqTotal = 0
+  // Alternate scheme: each group's marks = coverage × (questions × per-group value).
+  let altCqMarks = 0
 
   for (const sec of subject.sections) {
     let secWeightTotal = 0
@@ -61,14 +64,25 @@ export function calculateScore(
     const potential = avail * secRatio
     mandatoryCq += Math.min(potential, minReq)
     overflowCq += Math.max(0, potential - minReq)
+
+    // Alternate scheme: a student answers `answerCount` questions from this group
+    // (min_cq_required, or all `avail` if 0), each worth the group's own value;
+    // earned in proportion to topic coverage.
+    const answerCount = minReq > 0 ? minReq : avail
+    altCqMarks += Math.min(potential, answerCount) * num(sec.cq_value_per_q)
   }
 
   const finalMCQ = Math.min(earnedMcq, maxMcq)
   const finalSQ = Math.min(earnedSqCount * sqValue, maxSq)
 
-  const globalOverflowCap = Math.max(0, totalCqToAnswer - minRequiredCqTotal)
-  let finalCQ = (mandatoryCq + Math.min(overflowCq, globalOverflowCap)) * cqValue
-  finalCQ = Math.min(finalCQ, maxCq)
+  let finalCQ: number
+  if (alt) {
+    finalCQ = Math.min(altCqMarks, maxCq)
+  } else {
+    const globalOverflowCap = Math.max(0, totalCqToAnswer - minRequiredCqTotal)
+    finalCQ = (mandatoryCq + Math.min(overflowCq, globalOverflowCap)) * cqValue
+    finalCQ = Math.min(finalCQ, maxCq)
+  }
 
   const finalScore = finalMCQ + finalSQ + finalCQ
   const totalPossible = maxMcq + maxSq + maxCq

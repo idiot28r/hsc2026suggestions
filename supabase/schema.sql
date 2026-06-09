@@ -17,6 +17,10 @@ create table if not exists subjects (
   max_sq          numeric not null default 0,
   cq_value_per_q  numeric not null default 10,
   sq_value_per_q  numeric not null default 2,
+  -- Alternate marks scheme (for written subjects like Bangla 2nd / English):
+  -- per-group CQ marks + a custom label instead of one global CQ value.
+  alt_marks_scheme boolean not null default false,
+  cq_label        text,
   created_at      timestamptz not null default now()
 );
 
@@ -26,6 +30,8 @@ create table if not exists sections (
   title               text not null,
   min_cq_required     numeric not null default 0,
   total_cq_available  numeric not null default 0,
+  -- Per-group CQ marks (used only when the subject's alt_marks_scheme is on).
+  cq_value_per_q      numeric not null default 0,
   sort_order          integer not null default 0
 );
 
