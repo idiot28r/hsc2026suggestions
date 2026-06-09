@@ -14,7 +14,7 @@ export default function StatusBanner({ user, saveState }: { user: UserParams; sa
     return (
       <div className="banner guest">
         <span className="dot" style={{ background: 'currentColor' }} />
-        ⚠️ গেস্ট মোড — তোমার অগ্রগতি সংরক্ষণ হচ্ছে না
+        ⚠️ তোমার তথ্যগুলো সংরক্ষিত রাখতে এখনি লগ ইন কর brritto app - এ
       </div>
     )
   }
